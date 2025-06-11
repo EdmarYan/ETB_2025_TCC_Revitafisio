@@ -43,13 +43,13 @@ public class AvaliacaoRpg {
     @Column(columnDefinition = "TEXT") private String tratamento_proposto;
     @Column(columnDefinition = "TEXT") private String observacoes;
 
-    // --- Campos Booleanos ---
-    private boolean ressonancia_magnetica;
-    private boolean raio_x;
-    private boolean tomografia;
-    private boolean uso_medicamentos;
+    // ### MUDANÇA AQUI: de 'boolean' para 'Boolean' ###
+    private Boolean ressonancia_magnetica;
+    private Boolean raio_x;
+    private Boolean tomografia;
+    private Boolean uso_medicamentos;
 
-    // --- Campos com Enums Específicos e Corretos ---
+    // --- Campos com Enums (sem alteração) ---
     @Enumerated(EnumType.STRING) private GrauDor grau_dor;
     @Enumerated(EnumType.STRING) private PosicaoCabeca cabeca;
     @Enumerated(EnumType.STRING) private NivelamentoOmbros ombros;
@@ -60,7 +60,7 @@ public class AvaliacaoRpg {
     @Enumerated(EnumType.STRING) private PosicaoPelve pelve;
     @Enumerated(EnumType.STRING) private PosicaoEscapulas escapulas;
 
-    // --- Enums Específicos para cada campo, como deve ser ---
+    // Enums (sem alteração)
     public enum GrauDor { LEVE, MODERADA, INTENSA }
     public enum PosicaoCabeca { ALINHADA, RODADA_DIREITA, RODADA_ESQUERDA, INCLINADA_ESQUERDA, INCLINADA_DIREITA }
     public enum NivelamentoOmbros { NIVELADOS, ESQUERDO_ELEVADO, DIREITO_ELEVADO }

@@ -1,10 +1,10 @@
 package com.revitafisio.funcionario.controller;
 
 import com.revitafisio.entities.usuarios.Fisioterapeuta;
-import com.revitafisio.entities.usuarios.Usuario;
 import com.revitafisio.funcionario.service.FuncionarioService;
 import com.revitafisio.records.AtualizarFuncionarioRequest;
 import com.revitafisio.records.CriarFuncionarioRequest;
+import com.revitafisio.records.FuncionarioDetalhesResponse;
 import com.revitafisio.records.FuncionarioResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,13 +35,13 @@ public class FuncionarioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> buscarPorId(@PathVariable Integer id) {
-        var funcionario = funcionarioService.buscarDetalhesPorId(id);
-        return ResponseEntity.ok(funcionario);
+    public ResponseEntity<FuncionarioDetalhesResponse> buscarPorId(@PathVariable Integer id) {
+        var funcionarioDto = funcionarioService.buscarDetalhesPorId(id);
+        return ResponseEntity.ok(funcionarioDto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> atualizarFuncionario(@PathVariable Integer id, @RequestBody AtualizarFuncionarioRequest request) {
+    public ResponseEntity<FuncionarioDetalhesResponse> atualizarFuncionario(@PathVariable Integer id, @RequestBody AtualizarFuncionarioRequest request) {
         var funcionarioAtualizado = funcionarioService.atualizarFuncionario(id, request);
         return ResponseEntity.ok(funcionarioAtualizado);
     }
@@ -57,9 +57,10 @@ public class FuncionarioController {
         funcionarioService.ativarFuncionario(id);
         return ResponseEntity.noContent().build();
     }
+
     @PutMapping("/{id}/especialidades")
-    public ResponseEntity<Fisioterapeuta> atualizarEspecialidades(@PathVariable Integer id, @RequestBody List<Integer> idEspecialidades) {
+    public ResponseEntity<FuncionarioDetalhesResponse> atualizarEspecialidades(@PathVariable Integer id, @RequestBody List<Integer> idEspecialidades) {
         var fisioAtualizado = funcionarioService.atualizarEspecialidades(id, idEspecialidades);
-        return ResponseEntity.ok(fisioAtualizado);
+        return ResponseEntity.ok(FuncionarioDetalhesResponse.from(fisioAtualizado));
     }
 }

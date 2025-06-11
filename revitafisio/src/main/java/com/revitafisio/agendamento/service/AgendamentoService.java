@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,11 +36,14 @@ public class AgendamentoService {
         var fisioterapeuta = usuarioRepository.findById(request.idFisioterapeuta()).orElseThrow(() -> new RuntimeException("Fisioterapeuta não encontrado."));
         var especialidade = especialidadeRepository.findById(request.idEspecialidade()).orElseThrow(() -> new RuntimeException("Especialidade não encontrada."));
 
-        List<HorarioDisponivel> horariosDoDia = horarioDisponivelRepository.findByFisioterapeutaIdUsuarioAndData(request.idFisioterapeuta(), request.dataHoraInicio().toLocalDate());
-        HorarioDisponivel slotParaAgendar = horariosDoDia.stream()
-                .filter(h -> h.getHoraInicio().equals(request.dataHoraInicio().toLocalTime()) && h.isDisponivel())
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Horário não está disponível."));
+        Optional<HorarioDisponivel> slotParaAgendarOpt = horarioDisponivelRepository.findByFisioterapeutaIdUsuarioAndDataAndHoraInicio(
+                request.idFisioterapeuta(),
+                request.dataHoraInicio().toLocalDate(),
+                request.dataHoraInicio().toLocalTime()
+        );
+
+        HorarioDisponivel slotParaAgendar = slotParaAgendarOpt.filter(HorarioDisponivel::isDisponivel)
+                .orElseThrow(() -> new RuntimeException("Horário não está disponível ou não existe."));
 
         slotParaAgendar.setDisponivel(false);
         horarioDisponivelRepository.save(slotParaAgendar);
@@ -71,37 +75,32 @@ public class AgendamentoService {
     }
 
     @Transactional
-    public void cancelar(Integer agendamentoId) {
-        var agendamento = agendamentoRepository.findById(agendamentoId).orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
-        agendamento.setStatus(Agendamento.StatusAgendamento.CANCELADO);
-        liberarHorario(agendamento);
+    public void atualizarStatus(Integer agendamentoId, String novoStatusStr) {
+        // Converte a String do request para o nosso Enum de forma segura
+        Agendamento.StatusAgendamento novoStatus = Agendamento.StatusAgendamento.valueOf(novoStatusStr.toUpperCase());
+
+        var agendamento = agendamentoRepository.findById(agendamentoId)
+                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
+
+        // Libera o horário apenas se o status anterior não era CANCELADO e o novo é
+        boolean eraConfirmado = agendamento.getStatus() == Agendamento.StatusAgendamento.CONFIRMADO;
+        if (eraConfirmado && novoStatus == Agendamento.StatusAgendamento.CANCELADO) {
+            liberarHorario(agendamento);
+        }
+
+        agendamento.setStatus(novoStatus);
         agendamentoRepository.save(agendamento);
     }
 
-    @Transactional
-    public void marcarComoRealizado(Integer agendamentoId) {
-        var agendamento = agendamentoRepository.findById(agendamentoId).orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
-        agendamento.setStatus(Agendamento.StatusAgendamento.REALIZADO);
-        agendamentoRepository.save(agendamento);
-    }
-
-    @Transactional
-    public void marcarComoNaoCompareceu(Integer agendamentoId) {
-        var agendamento = agendamentoRepository.findById(agendamentoId).orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
-        agendamento.setStatus(Agendamento.StatusAgendamento.NAO_COMPARECEU);
-        agendamentoRepository.save(agendamento);
-    }
-
+    // O metodo liberarHorario continua o mesmo
     private void liberarHorario(Agendamento agendamento) {
-        horarioDisponivelRepository.findByFisioterapeutaIdUsuarioAndData(
-                        agendamento.getFisioterapeuta().getIdUsuario(),
-                        agendamento.getDataHoraInicio().toLocalDate()
-                ).stream()
-                .filter(h -> !h.isDisponivel() && h.getHoraInicio().equals(agendamento.getDataHoraInicio().toLocalTime()))
-                .findFirst()
-                .ifPresent(slot -> {
-                    slot.setDisponivel(true);
-                    horarioDisponivelRepository.save(slot);
-                });
+        horarioDisponivelRepository.findByFisioterapeutaIdUsuarioAndDataAndHoraInicio(
+                agendamento.getFisioterapeuta().getIdUsuario(),
+                agendamento.getDataHoraInicio().toLocalDate(),
+                agendamento.getDataHoraInicio().toLocalTime()
+        ).ifPresent(slot -> {
+            slot.setDisponivel(true);
+            horarioDisponivelRepository.save(slot);
+        });
     }
 }

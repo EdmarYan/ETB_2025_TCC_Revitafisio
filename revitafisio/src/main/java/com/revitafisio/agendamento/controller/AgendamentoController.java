@@ -1,6 +1,7 @@
 package com.revitafisio.agendamento.controller;
 
 import com.revitafisio.records.AgendamentoResponse;
+import com.revitafisio.records.AtualizarStatusRequest;
 import com.revitafisio.records.CriarAgendamentoRequest;
 import com.revitafisio.agendamento.service.AgendamentoService;
 import org.springframework.http.ResponseEntity;
@@ -38,21 +39,9 @@ public class AgendamentoController {
         return ResponseEntity.ok(agendamentoService.buscarAgendamentosPendentesDeStatus());
     }
 
-    @PatchMapping("/{id}/cancelar")
-    public ResponseEntity<Void> cancelarAgendamento(@PathVariable Integer id) {
-        agendamentoService.cancelar(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PatchMapping("/{id}/realizado")
-    public ResponseEntity<Void> marcarComoRealizado(@PathVariable Integer id) {
-        agendamentoService.marcarComoRealizado(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PatchMapping("/{id}/nao-compareceu")
-    public ResponseEntity<Void> marcarComoNaoCompareceu(@PathVariable Integer id) {
-        agendamentoService.marcarComoNaoCompareceu(id);
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Void> atualizarStatus(@PathVariable Integer id, @RequestBody AtualizarStatusRequest request) {
+        agendamentoService.atualizarStatus(id, request.novoStatus());
         return ResponseEntity.noContent().build();
     }
 }

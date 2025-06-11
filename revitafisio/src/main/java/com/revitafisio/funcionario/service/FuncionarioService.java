@@ -6,8 +6,9 @@ import com.revitafisio.entities.usuarios.Recepcionista;
 import com.revitafisio.entities.usuarios.Usuario;
 import com.revitafisio.records.AtualizarFuncionarioRequest;
 import com.revitafisio.records.CriarFuncionarioRequest;
+import com.revitafisio.records.FuncionarioDetalhesResponse;
 import com.revitafisio.records.FuncionarioResponse;
-import com.revitafisio.repository.EspecialidadeRepository; // VERIFIQUE SE ESTE IMPORT ESTÁ CORRETO
+import com.revitafisio.repository.EspecialidadeRepository;
 import com.revitafisio.repository.FuncionarioRepository;
 import com.revitafisio.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
@@ -22,10 +23,8 @@ public class FuncionarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final FuncionarioRepository funcionarioRepository;
-    // 1. ADICIONAR O CAMPO PARA GUARDAR O REPOSITÓRIO
     private final EspecialidadeRepository especialidadeRepository;
 
-    // 2. ATUALIZAR O CONSTRUTOR PARA RECEBER A DEPENDÊNCIA
     public FuncionarioService(UsuarioRepository usuarioRepository,
                               FuncionarioRepository funcionarioRepository,
                               EspecialidadeRepository especialidadeRepository) {
@@ -51,57 +50,56 @@ public class FuncionarioService {
         novoFuncionario.setDataNascimento(request.dataNascimento());
         novoFuncionario.setSenha(request.senha());
         novoFuncionario.setAtivo(true);
-
         var funcionarioSalvo = usuarioRepository.save(novoFuncionario);
         return funcionarioSalvo.getIdUsuario();
     }
 
-    // ... (métodos buscarTodos, buscarDetalhesPorId, etc. continuam iguais)
-
-    @Transactional
-    public Fisioterapeuta atualizarEspecialidades(Integer idFisioterapeuta, List<Integer> idEspecialidades) {
-        var fisio = (Fisioterapeuta) funcionarioRepository.findFuncionarioById(idFisioterapeuta)
-                .orElseThrow(() -> new RuntimeException("Fisioterapeuta não encontrado"));
-
-        // 3. CORRIGIR A CHAMADA PARA USAR O OBJETO injetado ("this.especialidadeRepository")
-        var especialidades = new HashSet<>(this.especialidadeRepository.findAllById(idEspecialidades));
-
-        fisio.setEspecialidades(especialidades);
-        return usuarioRepository.save(fisio);
-    }
-
-    // Demais métodos sem alteração...
     public List<FuncionarioResponse> buscarTodos() {
         return funcionarioRepository.findAllFuncionarios().stream()
                 .map(this::toFuncionarioResponse)
                 .collect(Collectors.toList());
     }
 
-    public Usuario buscarDetalhesPorId(Integer id) {
-        return funcionarioRepository.findFuncionarioById(id)
+    @Transactional(readOnly = true)
+    public FuncionarioDetalhesResponse buscarDetalhesPorId(Integer id) {
+        var funcionario = funcionarioRepository.findFuncionarioById(id)
                 .orElseThrow(() -> new RuntimeException("Funcionário não encontrado com o ID: " + id));
+        return FuncionarioDetalhesResponse.from(funcionario);
     }
 
     @Transactional
-    public Usuario atualizarFuncionario(Integer id, AtualizarFuncionarioRequest request) {
-        var funcionario = buscarDetalhesPorId(id);
+    public FuncionarioDetalhesResponse atualizarFuncionario(Integer id, AtualizarFuncionarioRequest request) {
+        var funcionario = funcionarioRepository.findFuncionarioById(id)
+                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado com o ID: " + id));
         funcionario.setNome(request.nome());
         funcionario.setDataNascimento(request.dataNascimento());
-        return usuarioRepository.save(funcionario);
+        var salvo = usuarioRepository.save(funcionario);
+        return FuncionarioDetalhesResponse.from(salvo);
     }
 
     @Transactional
     public void inativarFuncionario(Integer id) {
-        var funcionario = buscarDetalhesPorId(id);
+        var funcionario = funcionarioRepository.findFuncionarioById(id)
+                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado com o ID: " + id));
         funcionario.setAtivo(false);
         usuarioRepository.save(funcionario);
     }
 
     @Transactional
     public void ativarFuncionario(Integer id) {
-        var funcionario = buscarDetalhesPorId(id);
+        var funcionario = funcionarioRepository.findFuncionarioById(id)
+                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado com o ID: " + id));
         funcionario.setAtivo(true);
         usuarioRepository.save(funcionario);
+    }
+
+    @Transactional
+    public Fisioterapeuta atualizarEspecialidades(Integer idFisioterapeuta, List<Integer> idEspecialidades) {
+        var fisio = (Fisioterapeuta) funcionarioRepository.findFuncionarioById(idFisioterapeuta)
+                .orElseThrow(() -> new RuntimeException("Fisioterapeuta não encontrado"));
+        var especialidades = new HashSet<>(this.especialidadeRepository.findAllById(idEspecialidades));
+        fisio.setEspecialidades(especialidades);
+        return usuarioRepository.save(fisio);
     }
 
     private FuncionarioResponse toFuncionarioResponse(Usuario usuario) {

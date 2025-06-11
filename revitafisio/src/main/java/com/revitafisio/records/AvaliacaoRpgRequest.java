@@ -2,7 +2,6 @@ package com.revitafisio.records;
 
 import com.revitafisio.entities.paciente.AvaliacaoRpg;
 
-// DTO para receber os dados do formulário de RPG, usando os Enums.
 public record AvaliacaoRpgRequest(
         Integer idPaciente,
         Integer idFisioterapeuta,
@@ -15,10 +14,10 @@ public record AvaliacaoRpgRequest(
         String outros_desequilibrios,
         String tratamento_proposto,
         String observacoes,
-        boolean ressonancia_magnetica,
-        boolean raio_x,
-        boolean tomografia,
-        boolean uso_medicamentos,
+        Boolean ressonancia_magnetica,
+        Boolean raio_x,
+        Boolean tomografia,
+        Boolean uso_medicamentos,
         AvaliacaoRpg.GrauDor grau_dor,
         AvaliacaoRpg.PosicaoCabeca cabeca,
         AvaliacaoRpg.NivelamentoOmbros ombros,
