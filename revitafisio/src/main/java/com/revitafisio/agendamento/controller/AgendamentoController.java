@@ -1,9 +1,8 @@
 package com.revitafisio.agendamento.controller;
 
-import com.revitafisio.agendamento.service.AgendamentoService;
 import com.revitafisio.records.AgendamentoResponse;
 import com.revitafisio.records.CriarAgendamentoRequest;
-import org.springframework.format.annotation.DateTimeFormat;
+import com.revitafisio.agendamento.service.AgendamentoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,16 +21,38 @@ public class AgendamentoController {
 
     @PostMapping
     public ResponseEntity<AgendamentoResponse> criarAgendamento(@RequestBody CriarAgendamentoRequest request) {
-        var response = agendamentoService.criarAgendamento(request);
-        return ResponseEntity.status(201).body(response);
+        var agendamento = agendamentoService.criarAgendamento(request);
+        return ResponseEntity.ok(agendamento);
     }
 
     @GetMapping
-    public ResponseEntity<List<AgendamentoResponse>> buscarAgenda(
-            @RequestParam Integer idFisioterapeuta,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim) {
-        var agendamentos = agendamentoService.buscarAgenda(idFisioterapeuta, inicio, fim);
-        return ResponseEntity.ok(agendamentos);
+    public ResponseEntity<List<AgendamentoResponse>> buscarAgenda(@RequestParam Integer idFisioterapeuta,
+                                                                  @RequestParam LocalDateTime inicio,
+                                                                  @RequestParam LocalDateTime fim) {
+        var agenda = agendamentoService.buscarAgenda(idFisioterapeuta, inicio, fim);
+        return ResponseEntity.ok(agenda);
+    }
+
+    @GetMapping("/pendentes-status")
+    public ResponseEntity<List<AgendamentoResponse>> buscarPendentes() {
+        return ResponseEntity.ok(agendamentoService.buscarAgendamentosPendentesDeStatus());
+    }
+
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<Void> cancelarAgendamento(@PathVariable Integer id) {
+        agendamentoService.cancelar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/realizado")
+    public ResponseEntity<Void> marcarComoRealizado(@PathVariable Integer id) {
+        agendamentoService.marcarComoRealizado(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/nao-compareceu")
+    public ResponseEntity<Void> marcarComoNaoCompareceu(@PathVariable Integer id) {
+        agendamentoService.marcarComoNaoCompareceu(id);
+        return ResponseEntity.noContent().build();
     }
 }

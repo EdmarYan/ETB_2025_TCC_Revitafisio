@@ -50,6 +50,6 @@ public class Agendamento {
     private LocalDateTime prazoConfirmacao;
 
     public enum StatusAgendamento {
-        CONFIRMADO, CANCELADO, PENDENTE, REALIZADO
+        CONFIRMADO, CANCELADO, PENDENTE, REALIZADO,NAO_COMPARECEU
     }
 }

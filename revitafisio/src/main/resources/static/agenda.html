@@ -4,33 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agenda - Revitafisio</title>
-    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
     <style>
-        .time-slot {
-            cursor: pointer;
-            border: 1px solid #198754;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            border-radius: 0.25rem;
-            transition: background-color 0.2s, color 0.2s;
-            background-color: #d1e7dd; /* Verde para disponível */
-            color: #0a3622;
-            font-weight: 500;
-        }
-        .time-slot:hover {
-            background-color: #b_d_8_f_8_d; /* Verde mais escuro no hover */
-            border-color: #146c43;
-        }
-        .time-slot.booked {
-            background-color: #f8d7da; /* Vermelho para ocupado */
-            color: #58151c;
-            cursor: not-allowed;
-            border-color: #f1aeb5;
-            text-decoration: line-through;
-        }
-        .time-slot.booked:hover {
-            background-color: #f1aeb5;
-        }
+        .slot { border: 1px solid; padding: 0.75rem; margin-bottom: 1rem; border-radius: 0.375rem; transition: all 0.2s; }
+        .slot-disponivel { background-color: #d1e7dd; color: #0a3622; border-color: #a3cfbb; cursor: pointer; }
+        .slot-disponivel:hover { background-color: #a3cfbb; }
+        .slot-confirmado { background-color: #cff4fc; color: #055160; border-color: #9eeaf9; }
+        .slot-realizado { background-color: #d1fae5; color: #064e3b; border-color: #a7f3d0; font-weight: bold; }
+        .slot-cancelado { background-color: #f8d7da; color: #58151c; border-color: #f1aeb5; text-decoration: line-through; opacity: 0.7; }
+        .slot-nao_compareceu { background-color: #e2e3e5; color: #41464b; border-color: #c4c8cb; text-decoration: line-through; }
     </style>
 </head>
 <body>
@@ -44,70 +26,45 @@
 <div class="container mt-4">
     <h2>Agenda de Consultas</h2>
     <p>Selecione um profissional e uma data para visualizar os horários e agendar consultas.</p>
-
     <div class="card mb-4">
         <div class="card-body">
             <div class="row g-3 align-items-end">
-                <div class="col-md-5">
-                    <label for="fisioterapeutaSelect" class="form-label">Fisioterapeuta</label>
-                    <select id="fisioterapeutaSelect" class="form-select"></select>
-                </div>
-                <div class="col-md-4">
-                    <label for="dataSelect" class="form-label">Data</label>
-                    <input type="date" id="dataSelect" class="form-control">
-                </div>
-                <div class="col-md-3">
-                    <button id="buscarAgendaBtn" class="btn btn-primary w-100">Visualizar Agenda</button>
-                </div>
+                <div class="col-md-5"><label for="fisioterapeutaSelect" class="form-label">Fisioterapeuta</label><select id="fisioterapeutaSelect" class="form-select"></select></div>
+                <div class="col-md-4"><label for="dataSelect" class="form-label">Data</label><input type="date" id="dataSelect" class="form-control"></div>
+                <div class="col-md-3"><button id="buscarAgendaBtn" class="btn btn-primary w-100">Visualizar Agenda</button></div>
             </div>
         </div>
     </div>
-
-    <div id="loading" class="text-center d-none">
-        <div class="spinner-border" role="status"><span class="visually-hidden">Carregando...</span></div>
-    </div>
-
-    <div id="agenda-container" class="row">
-    </div>
+    <div id="loading" class="text-center d-none"><div class="spinner-border" role="status"></div></div>
+    <div id="agenda-container" class="row"></div>
 </div>
 
 <div class="modal fade" id="agendamentoModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">Novo Agendamento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+            <div class="modal-header"><h5 class="modal-title" id="modalTitle">Novo Agendamento</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <form id="formAgendamento">
-                    <div class="mb-3">
-                        <strong>Profissional:</strong> <span id="modalFisioNome"></span><br>
-                        <strong>Horário:</strong> <span id="modalHorario"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label for="pacienteSelect" class="form-label">Paciente</label>
-                        <select id="pacienteSelect" class="form-select" required></select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="especialidadeSelect" class="form-label">Especialidade</label>
-                        <select id="especialidadeSelect" class="form-select" required></select>
-                    </div>
+                    <div class="mb-3"><strong>Profissional:</strong> <span id="modalFisioNome"></span><br><strong>Horário:</strong> <span id="modalHorario"></span></div>
+                    <div class="mb-3"><label for="pacienteSelect" class="form-label">Paciente</label><select id="pacienteSelect" class="form-select" required></select></div>
+                    <div class="mb-3"><label for="especialidadeSelect" class="form-label">Especialidade</label><select id="especialidadeSelect" class="form-select" required></select></div>
                 </form>
                 <div id="resultadoModal" class="mt-3"></div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="confirmarAgendamentoBtn">Confirmar Agendamento</button>
-            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" id="confirmarAgendamentoBtn">Confirmar</button></div>
         </div>
     </div>
 </div>
 
-<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+</div>
+
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script>
     let todosPacientes = [];
     let todasEspecialidades = [];
     let agendamentoModalInstance;
+    let horarioSelecionado = {};
 
     document.addEventListener('DOMContentLoaded', async function() {
         agendamentoModalInstance = new bootstrap.Modal(document.getElementById('agendamentoModal'));
@@ -119,90 +76,113 @@
             localStorage.removeItem('usuarioLogado');
             window.location.href = '/';
         });
+
+        // Inicia o verificador de notificações
+        verificarConsultasAtivas();
+        setInterval(verificarConsultasAtivas, 60000); // Verifica a cada 1 minuto
     });
 
     // Funções de Carregamento de Dados Iniciais
     async function carregarFisioterapeutas() {
         try {
-            const select = document.getElementById('fisioterapeutaSelect');
             const response = await fetch('/funcionarios');
             const funcionarios = await response.json();
             const fisios = funcionarios.filter(f => f.tipo === 'FISIOTERAPEUTA');
-            if (fisios.length === 0) {
-                select.add(new Option('Nenhum fisioterapeuta encontrado', ''));
-            } else {
+            const select = document.getElementById('fisioterapeutaSelect');
+            select.innerHTML = '<option value="">Selecione um profissional...</option>';
+            if (fisios.length > 0) {
                 fisios.forEach(f => select.add(new Option(f.nome, f.id)));
             }
-        } catch (error) {
-            console.error('Erro ao carregar fisioterapeutas:', error);
-        }
+        } catch (error) { console.error('Erro ao carregar fisioterapeutas:', error); }
     }
 
     async function carregarPacientes() {
         try {
             const response = await fetch('/pacientes');
             todosPacientes = await response.json();
-        } catch (error) {
-            console.error('Erro ao carregar pacientes:', error);
-        }
+        } catch (error) { console.error('Erro ao carregar pacientes:', error); }
     }
 
     async function carregarEspecialidades() {
         try {
             const response = await fetch('/especialidades');
             todasEspecialidades = await response.json();
-        } catch (error) {
-            console.error('Erro ao carregar especialidades:', error);
-        }
+        } catch (error) { console.error('Erro ao carregar especialidades:', error); }
     }
 
-    // Lógica da Agenda - TOTALMENTE ATUALIZADA
+    // Função que renderiza a agenda
     async function renderizarAgenda() {
         const fisioId = document.getElementById('fisioterapeutaSelect').value;
         const data = document.getElementById('dataSelect').value;
         const container = document.getElementById('agenda-container');
         const loadingEl = document.getElementById('loading');
 
-        if (!fisioId) {
-            alert('Por favor, selecione um fisioterapeuta.');
-            return;
-        }
-
         container.innerHTML = '';
+        if (!fisioId) { return; }
         loadingEl.classList.remove('d-none');
 
         try {
-            // AQUI ESTÁ A MUDANÇA: Buscamos os horários direto da nova API
-            const response = await fetch(`/horarios-disponiveis?idFisioterapeuta=${fisioId}&data=${data}`);
-            if (!response.ok) {
-                const erroTexto = await response.text();
-                throw new Error(erroTexto || "Não foi possível carregar os horários. Verifique se a agenda do mês foi gerada para este profissional.");
-            }
+            const [horariosResponse, agendamentosResponse] = await Promise.all([
+                fetch(`/horarios-disponiveis?idFisioterapeuta=${fisioId}&data=${data}`),
+                fetch(`/agendamentos?idFisioterapeuta=${fisioId}&inicio=${data}T00:00:00&fim=${data}T23:59:59`)
+            ]);
+            if (!horariosResponse.ok) throw new Error("Agenda não gerada para este profissional ou data. Verifique em 'Meus Horários'.");
 
-            const horariosDoDia = await response.json();
+            const horariosTrabalho = await horariosResponse.json();
+            const agendamentos = await agendamentosResponse.json();
 
-            if (horariosDoDia.length === 0) {
-                container.innerHTML = '<div class="alert alert-warning col-12">Nenhum horário de trabalho encontrado para este profissional na data selecionada. Gere a agenda em "Meus Horários".</div>';
+            if (horariosTrabalho.length === 0 && agendamentos.length === 0) {
+                container.innerHTML = '<div class="alert alert-warning col-12">Nenhum horário de trabalho ou consulta para este dia.</div>';
                 return;
             }
 
-            // Renderiza cada slot com base no status 'disponivel'
-            horariosDoDia.sort((a,b) => a.horaInicio.localeCompare(b.horaInicio));
-            horariosDoDia.forEach(horario => {
-                const slotWrapper = document.createElement('div');
-                slotWrapper.className = 'col-md-2 col-sm-4 col-6'; // Layout responsivo
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'time-slot text-center';
-                slotDiv.textContent = horario.horaInicio.substring(0, 5);
+            const todosOsSlots = new Map();
+            horariosTrabalho.forEach(h => todosOsSlots.set(h.horaInicio.substring(0, 5), { tipo: 'disponivel', dados: h }));
+            agendamentos.forEach(a => todosOsSlots.set(a.inicio.substring(11, 16), { tipo: 'ocupado', dados: a }));
 
-                if (horario.disponivel) {
-                    slotDiv.onclick = () => abrirModalAgendamento(horario.horaInicio, horario.horaFim);
-                } else {
-                    slotDiv.classList.add('booked');
-                    slotDiv.textContent += ' - Ocupado';
+            const slotsOrdenados = Array.from(todosOsSlots.values()).sort((a, b) => {
+                const timeA = a.dados.horaInicio || a.dados.inicio;
+                const timeB = b.dados.horaInicio || b.dados.inicio;
+                return timeA.localeCompare(timeB);
+            });
+
+            container.innerHTML = '';
+            slotsOrdenados.forEach(slot => {
+                const slotWrapper = document.createElement('div');
+                slotWrapper.className = 'col-lg-3 col-md-4 col-sm-6';
+                let slotHTML = '';
+
+                if (slot.tipo === 'ocupado') {
+                    const agendamento = slot.dados;
+                    const statusClass = `slot-${agendamento.status.toLowerCase().replace(' ', '_')}`;
+                    slotHTML = `
+                        <div class="slot ${statusClass}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>${agendamento.inicio.substring(11, 16)}</strong> - ${agendamento.nomePaciente}
+                                    <small class="d-block badge bg-dark text-white text-uppercase mt-1">${agendamento.status.replace('_', ' ')}</small>
+                                </div>
+                                ${ agendamento.status === 'CONFIRMADO' ? `
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Ações</button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="atualizarStatus(${agendamento.id}, 'realizado')">Marcar como Realizado</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="atualizarStatus(${agendamento.id}, 'nao-compareceu')">Marcar Ausência</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="atualizarStatus(${agendamento.id}, 'cancelado')">Cancelar Consulta</a></li>
+                                    </ul>
+                                </div>` : '' }
+                            </div>
+                        </div>`;
+                } else if (slot.dados.disponivel) {
+                    const horario = slot.dados;
+                    slotHTML = `<div class="slot slot-disponivel text-center" onclick="abrirModalAgendamento('${horario.horaInicio}', '${horario.horaFim}')"><strong>${horario.horaInicio.substring(0, 5)}</strong> - Disponível</div>`;
                 }
-                slotWrapper.appendChild(slotDiv);
-                container.appendChild(slotWrapper);
+
+                if (slotHTML) {
+                    slotWrapper.innerHTML = slotHTML;
+                    container.appendChild(slotWrapper);
+                }
             });
         } catch(error) {
             container.innerHTML = `<div class="alert alert-danger col-12">${error.message}</div>`;
@@ -211,75 +191,121 @@
         }
     }
 
+    // Funções do Modal e de Ações
     function abrirModalAgendamento(horaInicio, horaFim) {
-        preencherModalDropdowns();
-        const fisioNome = document.getElementById('fisioterapeutaSelect').options[document.getElementById('fisioterapeutaSelect').selectedIndex].text;
+        horarioSelecionado = { horaInicio, horaFim };
+        const fisioSelect = document.getElementById('fisioterapeutaSelect');
         const dataFormatada = new Date(document.getElementById('dataSelect').value + 'T00:00:00').toLocaleDateString('pt-BR');
 
-        document.getElementById('modalTitle').textContent = `Novo Agendamento`;
-        document.getElementById('modalFisioNome').textContent = fisioNome;
-        document.getElementById('modalHorario').textContent = `${dataFormatada} das ${horaInicio.substring(0,5)} às ${horaFim.substring(0,5)}`;
+        document.getElementById('modalFisioNome').textContent = fisioSelect.options[fisioSelect.selectedIndex].text;
+        document.getElementById('modalHorario').textContent = `${dataFormatada} das ${horaInicio.substring(0, 5)} às ${horaFim.substring(0, 5)}`;
 
-        const form = document.getElementById('formAgendamento');
-        form.dataset.horaInicio = horaInicio;
-        form.dataset.horaFim = horaFim;
+        // Preenche os dropdowns do modal
+        const pacienteSelect = document.getElementById('pacienteSelect');
+        pacienteSelect.innerHTML = '<option value="">Selecione...</option>';
+        todosPacientes.forEach(p => pacienteSelect.add(new Option(p.nome, p.id)));
+        const especialidadeSelect = document.getElementById('especialidadeSelect');
+        especialidadeSelect.innerHTML = '<option value="">Selecione...</option>';
+        todasEspecialidades.forEach(e => especialidadeSelect.add(new Option(e.nome, e.idEspecialidade)));
 
+        document.getElementById('formAgendamento').reset();
         document.getElementById('resultadoModal').innerHTML = '';
         agendamentoModalInstance.show();
     }
 
-    function preencherModalDropdowns() {
-        const pacienteSelect = document.getElementById('pacienteSelect');
-        pacienteSelect.innerHTML = '<option value="">Selecione...</option>';
-        todosPacientes.forEach(p => pacienteSelect.add(new Option(p.nome, p.id)));
-
-        const especialidadeSelect = document.getElementById('especialidadeSelect');
-        especialidadeSelect.innerHTML = '<option value="">Selecione...</option>';
-        todasEspecialidades.forEach(e => especialidadeSelect.add(new Option(e.nome, e.idEspecialidade)));
-    }
-
     async function confirmarAgendamento() {
-        const resultadoDiv = document.getElementById('resultadoModal');
-        resultadoDiv.innerHTML = '';
-
-        const form = document.getElementById('formAgendamento');
-        const data = document.getElementById('dataSelect').value;
-        const horaInicio = form.dataset.horaInicio;
-        const horaFim = form.dataset.horaFim;
-
         const requestBody = {
             idPaciente: document.getElementById('pacienteSelect').value,
             idFisioterapeuta: document.getElementById('fisioterapeutaSelect').value,
             idEspecialidade: document.getElementById('especialidadeSelect').value,
-            dataHoraInicio: `${data}T${horaInicio}`,
-            dataHoraFim: `${data}T${horaFim}`
+            dataHoraInicio: `${document.getElementById('dataSelect').value}T${horarioSelecionado.horaInicio}`,
+            dataHoraFim: `${document.getElementById('dataSelect').value}T${horarioSelecionado.horaFim}`,
         };
-
-        if(!requestBody.idPaciente || !requestBody.idEspecialidade) {
-            alert('Por favor, selecione o paciente e a especialidade.');
-            return;
-        }
-
         try {
             const response = await fetch('/agendamentos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
+                body: JSON.stringify(requestBody),
             });
-
-            if(!response.ok) {
-                const erro = await response.json();
-                throw new Error(erro.message || 'Não foi possível realizar o agendamento.');
-            }
-
-            alert('Agendamento realizado com sucesso!');
+            if (!response.ok) throw new Error('Falha ao agendar. Verifique se todos os campos estão preenchidos.');
             agendamentoModalInstance.hide();
-            renderizarAgenda(); // Atualiza a visualização da agenda
+            renderizarAgenda();
+        } catch (error) {
+            document.getElementById('resultadoModal').innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+        }
+    }
+
+    async function atualizarStatus(agendamentoId, novoStatus) {
+        if (!confirm(`Tem certeza que deseja marcar esta consulta como "${novoStatus.replace('_', ' ')}"?`)) return;
+        try {
+            const response = await fetch(`/agendamentos/${agendamentoId}/${novoStatus}`, { method: 'PATCH' });
+            if (!response.ok) throw new Error(`Falha ao atualizar o status.`);
+            renderizarAgenda();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    // Funções de Notificação
+    async function verificarConsultasAtivas() {
+        try {
+            const response = await fetch('/agendamentos/pendentes-status');
+            if(response.ok) {
+                const agendamentos = await response.json();
+                agendamentos.forEach(criarNotificacao);
+            }
         } catch(error) {
-            resultadoDiv.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+            console.error("Erro ao verificar consultas ativas:", error);
+        }
+    }
+
+    function criarNotificacao(agendamento) {
+        const toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) return;
+
+        const toastId = `toast-${agendamento.id}`;
+        if (document.getElementById(toastId)) return;
+
+        const toastHTML = `
+        <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Lembrete de Consulta</strong>
+                <small>${agendamento.inicio.substring(11, 16)}</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                A consulta com <strong>${agendamento.nomePaciente}</strong> já ocorreu. Por favor, atualize o status.
+                <div class="mt-2 pt-2 border-top">
+                    <button type="button" class="btn btn-success btn-sm" onclick="atualizarStatusToast(${agendamento.id}, 'realizado', this)">Realizada</button>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="atualizarStatusToast(${agendamento.id}, 'nao_compareceu', this)">Não Compareceu</button>
+                </div>
+            </div>
+        </div>`;
+        toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+
+        toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
+    }
+
+    async function atualizarStatusToast(agendamentoId, novoStatus, button) {
+        try {
+            button.disabled = true;
+            const response = await fetch(`/agendamentos/${agendamentoId}/${novoStatus}`, { method: 'PATCH' });
+            if(!response.ok) throw new Error(`Falha ao atualizar o status.`);
+            const toastElement = document.getElementById(`toast-${agendamentoId}`);
+            if(toastElement) bootstrap.Toast.getInstance(toastElement).hide();
+            // Se a agenda do dia estiver sendo exibida, atualiza-a
+            if(document.getElementById('agenda-container').innerHTML !== '') {
+                renderizarAgenda();
+            }
+        } catch(error) {
+            alert(error.message);
+            button.disabled = false;
         }
     }
 </script>
-
 </body>
 </html>

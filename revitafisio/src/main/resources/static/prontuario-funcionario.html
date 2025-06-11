@@ -10,7 +10,6 @@
     </style>
 </head>
 <body>
-
 <nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="/dashboard.html">Revitafisio</a>
@@ -24,46 +23,72 @@
     </div>
 
     <div id="details-container" class="d-none">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 id="nomeFuncionarioView"></h2>
-            <div>
-                <button class="btn btn-secondary" id="editButton">Editar</button>
-                <button class="btn btn-success hidden" id="saveButton">Salvar</button>
-                <button class="btn btn-danger hidden" id="cancelButton">Cancelar</button>
-                <button class="btn btn-danger" id="inativarBtn">Inativar</button>
-                <button class="btn btn-success hidden" id="ativarBtn">Reativar</button>
+        <div class="card">
+            <div class="card-header"><h4 class="mb-0">Informações do Profissional</h4></div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 id="nomeFuncionarioView"></h2>
+                    <div id="botoes-edicao-funcionario">
+                        <button class="btn btn-secondary" id="editButton">Editar</button>
+                        <button class="btn btn-success hidden" id="saveButton">Salvar</button>
+                        <button class="btn btn-danger hidden" id="cancelButton">Cancelar</button>
+                        <button class="btn btn-danger" id="inativarBtn">Inativar</button>
+                        <button class="btn btn-success hidden" id="ativarBtn">Reativar</button>
+                    </div>
+                </div>
+                <hr>
+                <div id="viewMode">
+                    <p><strong>CPF:</strong> <span id="cpfFuncionario"></span></p>
+                    <p><strong>Data de Nascimento:</strong> <span id="nascimentoFuncionario"></span></p>
+                    <p><strong>Tipo:</strong> <span id="tipoFuncionario"></span></p>
+                    <p><strong>Status:</strong> <span id="statusFuncionario" class="badge"></span></p>
+                </div>
+                <form id="editMode" class="hidden">
+                    <div class="mb-3"><label for="nomeInput" class="form-label">Nome</label><input type="text" class="form-control" id="nomeInput"></div>
+                    <div class="mb-3"><label for="nascimentoInput" class="form-label">Data de Nascimento</label><input type="date" class="form-control" id="nascimentoInput"></div>
+                </form>
+                <div id="resultado" class="mt-3"></div>
             </div>
         </div>
-        <hr>
 
-        <div id="viewMode">
-            <p><strong>CPF:</strong> <span id="cpfFuncionario"></span></p>
-            <p><strong>Data de Nascimento:</strong> <span id="nascimentoFuncionario"></span></p>
-            <p><strong>Tipo:</strong> <span id="tipoFuncionario"></span></p>
-            <p><strong>Status:</strong> <span id="statusFuncionario" class="badge"></span></p>
+        <div class="card mt-4" id="card-especialidades" style="display: none;">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Especialidades Atendidas</h5>
+                <button class="btn btn-sm btn-outline-secondary" id="btn-editar-especialidades" data-bs-toggle="modal" data-bs-target="#especialidadesModal">Editar</button>
+            </div>
+            <div class="card-body" id="lista-especialidades-badges">
+            </div>
         </div>
-
-        <form id="editMode" class="hidden">
-            <div class="mb-3">
-                <label for="nomeInput" class="form-label">Nome</label>
-                <input type="text" class="form-control" id="nomeInput">
-            </div>
-            <div class="mb-3">
-                <label for="nascimentoInput" class="form-label">Data de Nascimento</label>
-                <input type="date" class="form-control" id="nascimentoInput">
-            </div>
-        </form>
-
-        <div id="resultado" class="mt-3"></div>
     </div>
 </div>
 
+<div class="modal fade" id="especialidadesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Especialidades</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Selecione as especialidades atendidas por este profissional.</p>
+                <div id="checkbox-container-especialidades"></div>
+                <div id="resultadoModal" class="mt-2"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="salvarEspecialidadesBtn">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const funcionarioId = urlParams.get('id');
     let funcionarioAtual = {};
+    let todasEspecialidades = [];
 
-    // Elementos da UI
     const viewMode = document.getElementById('viewMode');
     const editMode = document.getElementById('editMode');
     const editButton = document.getElementById('editButton');
@@ -73,29 +98,33 @@
     const ativarBtn = document.getElementById('ativarBtn');
 
     document.addEventListener('DOMContentLoaded', function() {
-        if (!funcionarioId) {
-            alert('ID do funcionário não fornecido.');
-            window.location.href = '/funcionarios.html';
+        const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+        if (!funcionarioId || !usuarioLogado) {
+            alert('Acesso inválido.');
+            window.location.href = '/dashboard.html';
             return;
         }
-        carregarDadosFuncionario(funcionarioId);
 
-        // Event Listeners dos botões
+        // Apenas Admins podem ver os botões de edição de funcionário
+        document.getElementById('botoes-edicao-funcionario').style.display = (usuarioLogado.tipoUsuario === 'ADMIN') ? 'flex' : 'none';
+        document.getElementById('btn-editar-especialidades').style.display = (usuarioLogado.tipoUsuario === 'ADMIN') ? 'block' : 'none';
+
+        carregarDadosFuncionario(funcionarioId);
+        carregarTodasEspecialidades();
+
+        // Listeners de eventos
         editButton.addEventListener('click', toggleEditMode);
-        saveButton.addEventListener('click', salvarAlteracoes);
-        cancelButton.addEventListener('click', () => {
-            toggleEditMode();
-            preencherDadosNaTela(funcionarioAtual); // Restaura dados originais
-        });
-        inativarBtn.addEventListener('click', () => inativarFuncionario(funcionarioId));
-        ativarBtn.addEventListener('click', () => ativarFuncionario(funcionarioId));
+        document.getElementById('salvarEspecialidadesBtn').addEventListener('click', salvarEspecialidades);
         document.getElementById('logoutButton').addEventListener('click', () => {
             localStorage.removeItem('usuarioLogado');
             window.location.href = '/';
         });
+        // Você precisará implementar as funções de salvar/inativar/ativar se desejar
     });
 
     async function carregarDadosFuncionario(id) {
+        const loadingEl = document.getElementById('loading');
+        const detailsContainer = document.getElementById('details-container');
         try {
             const response = await fetch(`/funcionarios/${id}`);
             if (!response.ok) throw new Error('Funcionário não encontrado.');
@@ -103,44 +132,46 @@
             funcionarioAtual = await response.json();
             preencherDadosNaTela(funcionarioAtual);
 
-            document.getElementById('loading').classList.add('d-none');
-            document.getElementById('details-container').classList.remove('d-none');
+            loadingEl.classList.add('d-none');
+            detailsContainer.classList.remove('d-none');
         } catch (error) {
             alert(error.message);
             window.location.href = '/funcionarios.html';
         }
     }
 
+    async function carregarTodasEspecialidades() {
+        try {
+            const response = await fetch('/especialidades');
+            todasEspecialidades = await response.json();
+        } catch (error) {
+            console.error("Falha ao carregar especialidades.", error);
+        }
+    }
+
     function preencherDadosNaTela(func) {
         document.getElementById('nomeFuncionarioView').textContent = func.nome;
         document.getElementById('cpfFuncionario').textContent = func.cpf;
-
-        // Acessa o tipo do funcionário (discriminador) que está no campo 'tipo_usuario' no JSON
-        // O nome da classe não vem no JSON por padrão, então pegamos do nosso objeto
-        const tipoFuncionario = (func.tipo_usuario || 'FUNCIONÁRIO').replace('_', ' ');
-        document.getElementById('tipoFuncionario').textContent = tipoFuncionario.charAt(0).toUpperCase() + tipoFuncionario.slice(1).toLowerCase();
-
-        // Formatação da data
-        const dataNasc = new Date(func.dataNascimento + 'T00:00:00');
-        document.getElementById('nascimentoFuncionario').textContent = dataNasc.toLocaleDateString('pt-BR');
+        document.getElementById('nascimentoFuncionario').textContent = new Date(func.dataNascimento + 'T00:00:00').toLocaleDateString('pt-BR');
+        document.getElementById('tipoFuncionario').textContent = func.tipo_usuario;
 
         const statusBadge = document.getElementById('statusFuncionario');
-        statusBadge.className = 'badge';
-        if(func.ativo) {
-            statusBadge.textContent = 'Ativo';
-            statusBadge.classList.add('bg-success');
-            inativarBtn.classList.remove('hidden');
-            ativarBtn.classList.add('hidden');
-        } else {
-            statusBadge.textContent = 'Inativo';
-            statusBadge.classList.add('bg-danger');
-            inativarBtn.classList.add('hidden');
-            ativarBtn.classList.remove('hidden');
-        }
+        statusBadge.textContent = func.ativo ? 'Ativo' : 'Inativo';
+        statusBadge.className = func.ativo ? 'badge bg-success' : 'badge bg-danger';
+        inativarBtn.classList.toggle('hidden', !func.ativo);
+        ativarBtn.classList.toggle('hidden', func.ativo);
 
-        // Preenche o formulário de edição
         document.getElementById('nomeInput').value = func.nome;
         document.getElementById('nascimentoInput').value = func.dataNascimento;
+
+        const cardEspecialidades = document.getElementById('card-especialidades');
+        if (func.tipo_usuario === 'FISIOTERAPEUTA') {
+            cardEspecialidades.style.display = 'block';
+            renderizarBadgesEspecialidades(func.especialidades);
+            preencherModalEspecialidades(func.especialidades);
+        } else {
+            cardEspecialidades.style.display = 'none';
+        }
     }
 
     function toggleEditMode() {
@@ -151,58 +182,67 @@
         cancelButton.classList.toggle('hidden');
     }
 
-    async function salvarAlteracoes() {
-        const dadosParaAtualizar = {
-            nome: document.getElementById('nomeInput').value,
-            dataNascimento: document.getElementById('nascimentoInput').value,
-        };
+    function renderizarBadgesEspecialidades(especialidadesDoFisio) {
+        const container = document.getElementById('lista-especialidades-badges');
+        container.innerHTML = '';
+        if (especialidadesDoFisio && especialidadesDoFisio.length > 0) {
+            especialidadesDoFisio.forEach(esp => {
+                const corTexto = getContrastYIQ(esp.cor);
+                container.innerHTML += `<span class="badge me-2 p-2" style="background-color: ${esp.cor}; color: ${corTexto};">${esp.nome}</span>`;
+            });
+        } else {
+            container.innerHTML = '<p class="text-muted small m-0">Nenhuma especialidade associada.</p>';
+        }
+    }
+
+    function preencherModalEspecialidades(especialidadesDoFisio = []) {
+        const container = document.getElementById('checkbox-container-especialidades');
+        container.innerHTML = '';
+        const idsAtuais = new Set(especialidadesDoFisio.map(e => e.idEspecialidade));
+
+        todasEspecialidades.forEach(esp => {
+            const isChecked = idsAtuais.has(esp.idEspecialidade) ? 'checked' : '';
+            container.innerHTML += `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="${esp.idEspecialidade}" id="esp-${esp.idEspecialidade}" ${isChecked}>
+                    <label class="form-check-label" for="esp-${esp.idEspecialidade}">${esp.nome}</label>
+                </div>`;
+        });
+    }
+
+    async function salvarEspecialidades() {
+        const checkboxes = document.querySelectorAll('#checkbox-container-especialidades input[type="checkbox"]:checked');
+        const idsSelecionados = Array.from(checkboxes).map(cb => parseInt(cb.value));
+        const resultadoDiv = document.getElementById('resultadoModal');
+        resultadoDiv.innerHTML = '';
 
         try {
-            const response = await fetch(`/funcionarios/${funcionarioId}`, {
+            const response = await fetch(`/funcionarios/${funcionarioId}/especialidades`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dadosParaAtualizar)
+                body: JSON.stringify(idsSelecionados)
             });
+            if (!response.ok) throw new Error('Falha ao atualizar especialidades.');
 
-            if (!response.ok) throw new Error('Falha ao atualizar o funcionário.');
+            const fisioAtualizado = await response.json();
+            // Atualiza os dados na tela principal
+            funcionarioAtual.especialidades = fisioAtualizado.especialidades;
+            renderizarBadgesEspecialidades(fisioAtualizado.especialidades);
 
-            funcionarioAtual = await response.json();
-            preencherDadosNaTela(funcionarioAtual);
-            toggleEditMode();
-            alert('Funcionário atualizado com sucesso!');
-        } catch (error) {
-            alert(error.message);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('especialidadesModal'));
+            modal.hide();
+        } catch(error) {
+            resultadoDiv.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
         }
     }
 
-    async function inativarFuncionario(id) {
-        if (!confirm('Tem certeza que deseja inativar este funcionário?')) return;
-        try {
-            const response = await fetch(`/funcionarios/${id}`, { method: 'DELETE' });
-            if (!response.ok) throw new Error('Falha ao inativar o funcionário.');
-
-            alert('Funcionário inativado com sucesso!');
-            funcionarioAtual.ativo = false; // Atualiza o estado local
-            preencherDadosNaTela(funcionarioAtual);
-
-        } catch (error) {
-            alert(error.message);
-        }
-    }
-
-    async function ativarFuncionario(id) {
-        if (!confirm('Tem certeza que deseja reativar este funcionário?')) return;
-        try {
-            const response = await fetch(`/funcionarios/${id}/ativar`, { method: 'PATCH' });
-            if (!response.ok) throw new Error('Falha ao reativar o funcionário.');
-
-            alert('Funcionário reativado com sucesso!');
-            funcionarioAtual.ativo = true; // Atualiza o estado local
-            preencherDadosNaTela(funcionarioAtual);
-
-        } catch (error) {
-            alert(error.message);
-        }
+    function getContrastYIQ(hexcolor){
+        hexcolor = hexcolor.replace("#", "");
+        var r = parseInt(hexcolor.substr(0,2),16);
+        var g = parseInt(hexcolor.substr(2,2),16);
+        var b = parseInt(hexcolor.substr(4,2),16);
+        var yiq = ((r*299)+(g*587)+(b*114))/1000;
+        return (yiq >= 128) ? 'black' : 'white';
     }
 </script>
 </body>

@@ -1,5 +1,6 @@
 package com.revitafisio.funcionario.controller;
 
+import com.revitafisio.entities.usuarios.Fisioterapeuta;
 import com.revitafisio.entities.usuarios.Usuario;
 import com.revitafisio.funcionario.service.FuncionarioService;
 import com.revitafisio.records.AtualizarFuncionarioRequest;
@@ -55,5 +56,10 @@ public class FuncionarioController {
     public ResponseEntity<Void> ativarFuncionario(@PathVariable Integer id) {
         funcionarioService.ativarFuncionario(id);
         return ResponseEntity.noContent().build();
+    }
+    @PutMapping("/{id}/especialidades")
+    public ResponseEntity<Fisioterapeuta> atualizarEspecialidades(@PathVariable Integer id, @RequestBody List<Integer> idEspecialidades) {
+        var fisioAtualizado = funcionarioService.atualizarEspecialidades(id, idEspecialidades);
+        return ResponseEntity.ok(fisioAtualizado);
     }
 }

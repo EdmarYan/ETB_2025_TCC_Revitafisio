@@ -36,7 +36,15 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+    if (!usuarioLogado || usuarioLogado.tipoUsuario !== 'ADMIN') {
+      alert('Acesso negado. Apenas administradores podem gerenciar funcionários.');
+      window.location.href = '/dashboard.html';
+      return;
+    }
+
     carregarFuncionarios();
+
     document.getElementById('logoutButton').addEventListener('click', () => {
       localStorage.removeItem('usuarioLogado');
       window.location.href = '/';

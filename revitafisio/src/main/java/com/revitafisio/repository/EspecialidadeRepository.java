@@ -6,5 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EspecialidadeRepository extends JpaRepository<Especialidade, Integer> {
-    // Por enquanto, os métodos padrão do JpaRepository são suficientes.
+    // Está vazio de propósito!
+    // A interface JpaRepository já nos fornece todos os métodos básicos que precisamos,
+    // como findAll(), findById(), e findAllById().
 }
