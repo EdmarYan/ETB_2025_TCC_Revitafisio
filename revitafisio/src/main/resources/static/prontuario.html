@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prontuário do Paciente - Revitafisio</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <style>
+        /* ATUALIZADO: !important para garantir sobreposição */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/dashboard.html">Revitafisio</a>
+        <ul class="navbar-nav ms-auto"><li class="nav-item"><a class="nav-link" href="#" id="logoutButton">Sair</a></li></ul>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div id="loading" class="text-center">
+        <div class="spinner-border" role="status"><span class="visually-hidden">Carregando...</span></div>
+    </div>
+
+    <div id="patient-details" class="d-none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 id="nomePacienteView"></h2>
+            <div>
+                <button class="btn btn-secondary" id="editButton">Editar</button>
+                <button class="btn btn-success hidden" id="saveButton">Salvar</button>
+                <button class="btn btn-danger hidden" id="cancelButton">Cancelar</button>
+                <!-- BOTÕES DE STATUS ATUALIZADOS -->
+                <button class="btn btn-danger hidden" id="inativarBtn">Inativar</button>
+                <button class="btn btn-success hidden" id="ativarBtn">Reativar</button>
+            </div>
+        </div>
+        <hr>
+
+        <div id="viewMode">
+            <p><strong>CPF:</strong> <span id="cpfPaciente"></span></p>
+            <p><strong>Data de Nascimento:</strong> <span id="nascimentoPaciente"></span></p>
+            <p><strong>Status:</strong> <span id="statusPaciente" class="badge"></span></p>
+        </div>
+
+        <form id="editMode" class="hidden">
+            <div class="mb-3">
+                <label for="nomeInput" class="form-label">Nome</label>
+                <input type="text" class="form-control" id="nomeInput">
+            </div>
+            <div class="mb-3">
+                <label for="nascimentoInput" class="form-label">Data de Nascimento</label>
+                <input type="date" class="form-control" id="nascimentoInput">
+            </div>
+        </form>
+
+        <div id="resultado" class="mt-3"></div>
+    </div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const pacienteId = urlParams.get('pacienteId');
+    let pacienteAtual = {}; // Para guardar os dados do paciente carregado
+
+    // Elementos da página
+    const viewMode = document.getElementById('viewMode');
+    const editMode = document.getElementById('editMode');
+    const editButton = document.getElementById('editButton');
+    const saveButton = document.getElementById('saveButton');
+    const cancelButton = document.getElementById('cancelButton');
+    const inativarBtn = document.getElementById('inativarBtn');
+    const ativarBtn = document.getElementById('ativarBtn');
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!pacienteId) {
+            alert('ID do paciente não fornecido.');
+            window.location.href = '/dashboard.html';
+            return;
+        }
+        carregarDadosPaciente(pacienteId);
+
+        // Adiciona funcionalidade aos botões
+        editButton.addEventListener('click', toggleEditMode);
+        saveButton.addEventListener('click', salvarAlteracoes);
+        cancelButton.addEventListener('click', toggleEditMode);
+        inativarBtn.addEventListener('click', () => inativarPaciente(pacienteId));
+        ativarBtn.addEventListener('click', () => ativarPaciente(pacienteId)); // NOVO LISTENER
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('usuarioLogado');
+            window.location.href = '/';
+        });
+    });
+
+    // READ - Função para carregar os dados do paciente da API
+    async function carregarDadosPaciente(id) {
+        try {
+            const response = await fetch(`/pacientes/${id}`);
+            if (!response.ok) throw new Error('Paciente não encontrado.');
+
+            pacienteAtual = await response.json();
+            preencherDadosNaTela(pacienteAtual);
+
+            document.getElementById('loading').classList.add('d-none');
+            document.getElementById('patient-details').classList.remove('d-none');
+        } catch (error) {
+            alert(error.message);
+            window.location.href = '/dashboard.html';
+        }
+    }
+
+    // ATUALIZADA: Lógica de exibição dos botões de status
+    function preencherDadosNaTela(paciente) {
+        // Modo de visualização
+        document.getElementById('nomePacienteView').textContent = paciente.nome;
+        document.getElementById('cpfPaciente').textContent = paciente.cpf;
+        document.getElementById('nascimentoPaciente').textContent = new Date(paciente.dataNascimento + 'T00:00:00').toLocaleDateString('pt-BR');
+        const statusBadge = document.getElementById('statusPaciente');
+        statusBadge.className = 'badge';
+
+        // CONTROLE DE BOTÕES ATUALIZADO
+        if(paciente.ativo) {
+            statusBadge.textContent = 'Ativo';
+            statusBadge.classList.add('bg-success');
+            // Mostra inativar e esconde ativar
+            inativarBtn.classList.remove('hidden');
+            ativarBtn.classList.add('hidden');
+        } else {
+            statusBadge.textContent = 'Inativo';
+            statusBadge.classList.add('bg-danger');
+            // Mostra ativar e esconde inativar
+            inativarBtn.classList.add('hidden');
+            ativarBtn.classList.remove('hidden');
+        }
+
+        // Modo de edição
+        document.getElementById('nomeInput').value = paciente.nome;
+        document.getElementById('nascimentoInput').value = paciente.dataNascimento;
+    }
+
+    // Função para alternar entre modo de visualização e edição
+    function toggleEditMode() {
+        viewMode.classList.toggle('hidden');
+        editMode.classList.toggle('hidden');
+        editButton.classList.toggle('hidden');
+        saveButton.classList.toggle('hidden');
+        cancelButton.classList.toggle('hidden');
+    }
+
+    // UPDATE - Função para salvar as alterações
+    async function salvarAlteracoes() {
+        const dadosParaAtualizar = {
+            nome: document.getElementById('nomeInput').value,
+            dataNascimento: document.getElementById('nascimentoInput').value,
+            contatos: [] // Lógica de contatos pode ser adicionada aqui
+        };
+
+        try {
+            const response = await fetch(`/pacientes/${pacienteId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dadosParaAtualizar)
+            });
+
+            if (response.ok) {
+                pacienteAtual = await response.json();
+                preencherDadosNaTela(pacienteAtual); // Atualiza a tela com os novos dados
+                toggleEditMode(); // Volta para o modo de visualização
+                alert('Paciente atualizado com sucesso!');
+            } else {
+                throw new Error('Falha ao atualizar o paciente.');
+            }
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    // DELETE - Função para inativar o paciente
+    async function inativarPaciente(id) {
+        if (!confirm('Tem certeza que deseja inativar este paciente?')) return;
+        try {
+            const response = await fetch(`/pacientes/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                alert('Paciente inativado com sucesso!');
+                window.location.href = '/dashboard.html';
+            } else {
+                throw new Error('Falha ao inativar o paciente.');
+            }
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    // NOVA FUNÇÃO: Reativar paciente
+    async function ativarPaciente(id) {
+        if (!confirm('Tem certeza que deseja reativar este paciente?')) return;
+        try {
+            const response = await fetch(`/pacientes/${id}/ativar`, { method: 'PATCH' });
+            if (response.ok) {
+                alert('Paciente reativado com sucesso!');
+                // Recarrega os dados para atualizar a interface
+                carregarDadosPaciente(id);
+            } else {
+                throw new Error('Falha ao reativar o paciente.');
+            }
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+</script>
+</body>
+</html>

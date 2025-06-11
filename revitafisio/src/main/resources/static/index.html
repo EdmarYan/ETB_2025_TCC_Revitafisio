@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Revitafisio</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <style>
+        /* Estilos simples para centralizar o formulário */
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+        }
+        .login-container {
+            max-width: 400px;
+            width: 100%;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<main class="login-container">
+    <form id="loginForm">
+        <h1 class="h3 mb-4 fw-normal text-center">Login Revitafisio</h1>
+
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="cpf" placeholder="CPF" required>
+            <label for="cpf">CPF</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control" id="senha" placeholder="Senha" required>
+            <label for="senha">Senha</label>
+        </div>
+
+        <button class="btn btn-primary w-100 py-2" type="submit">Entrar</button>
+
+        <div id="resultado" class="mt-3"></div>
+    </form>
+</main>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Previne que a página recarregue
+        fazerLogin();
+    });
+
+    async function fazerLogin() {
+        const cpf = document.getElementById('cpf').value;
+        const senha = document.getElementById('senha').value;
+        const resultadoDiv = document.getElementById('resultado');
+
+        const dados = { cpf: cpf, senha: senha };
+
+        try {
+            const response = await fetch('/login', { // Chama o endpoint /login do seu backend
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+
+            resultadoDiv.className = 'alert';
+
+            if (response.ok) {
+                const dadosUsuario = await response.json();
+
+                // Salva os dados do usuário no navegador para a próxima página usar
+                localStorage.setItem('usuarioLogado', JSON.stringify(dadosUsuario));
+
+                // Redireciona para a página do dashboard
+                window.location.href = '/dashboard.html';
+
+            } else {
+                resultadoDiv.textContent = 'Erro: CPF ou senha inválidos.';
+                resultadoDiv.classList.add('alert-danger');
+            }
+        } catch (error) {
+            resultadoDiv.className = 'alert alert-danger';
+            resultadoDiv.textContent = 'Erro de conexão com a API.';
+            console.error('Erro no fetch:', error);
+        }
+    }
+</script>
+
+</body>
+</html>
