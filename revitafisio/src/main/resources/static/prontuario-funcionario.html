@@ -24,7 +24,9 @@
 
     <div id="details-container" class="d-none">
         <div class="card">
-            <div class="card-header"><h4 class="mb-0">Informações do Profissional</h4></div>
+            <div class="card-header">
+                <h4 class="mb-0">Informações do Profissional</h4>
+            </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 id="nomeFuncionarioView"></h2>
@@ -89,6 +91,7 @@
     let funcionarioAtual = {};
     let todasEspecialidades = [];
 
+    // Mapeamento de elementos da página
     const viewMode = document.getElementById('viewMode');
     const editMode = document.getElementById('editMode');
     const editButton = document.getElementById('editButton');
@@ -105,22 +108,30 @@
             return;
         }
 
-        // Apenas Admins podem ver os botões de edição de funcionário
+        // Controle de visibilidade de botões baseado no perfil
         document.getElementById('botoes-edicao-funcionario').style.display = (usuarioLogado.tipoUsuario === 'ADMIN') ? 'flex' : 'none';
         document.getElementById('btn-editar-especialidades').style.display = (usuarioLogado.tipoUsuario === 'ADMIN') ? 'block' : 'none';
 
+        // Carregamento de dados iniciais
         carregarDadosFuncionario(funcionarioId);
         carregarTodasEspecialidades();
 
-        // Listeners de eventos
+        // ##### LISTENERS DE EVENTOS COMPLETOS #####
         editButton.addEventListener('click', toggleEditMode);
+        saveButton.addEventListener('click', salvarAlteracoes);
+        cancelButton.addEventListener('click', () => { toggleEditMode(); preencherDadosNaTela(funcionarioAtual); });
+        inativarBtn.addEventListener('click', () => inativarFuncionario(funcionarioId));
+        ativarBtn.addEventListener('click', () => ativarFuncionario(funcionarioId));
         document.getElementById('salvarEspecialidadesBtn').addEventListener('click', salvarEspecialidades);
         document.getElementById('logoutButton').addEventListener('click', () => {
             localStorage.removeItem('usuarioLogado');
             window.location.href = '/';
         });
-        // Você precisará implementar as funções de salvar/inativar/ativar se desejar
     });
+
+    // =======================================================
+    // FUNÇÕES DE CARREGAMENTO E MANIPULAÇÃO DE DADOS
+    // =======================================================
 
     async function carregarDadosFuncionario(id) {
         const loadingEl = document.getElementById('loading');
@@ -137,15 +148,6 @@
         } catch (error) {
             alert(error.message);
             window.location.href = '/funcionarios.html';
-        }
-    }
-
-    async function carregarTodasEspecialidades() {
-        try {
-            const response = await fetch('/especialidades');
-            todasEspecialidades = await response.json();
-        } catch (error) {
-            console.error("Falha ao carregar especialidades.", error);
         }
     }
 
@@ -182,6 +184,67 @@
         cancelButton.classList.toggle('hidden');
     }
 
+    // #### FUNÇÕES DOS BOTÕES QUE FALTAVAM ####
+    async function salvarAlteracoes() {
+        const dadosParaAtualizar = {
+            nome: document.getElementById('nomeInput').value,
+            dataNascimento: document.getElementById('nascimentoInput').value,
+        };
+        try {
+            const response = await fetch(`/funcionarios/${funcionarioId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dadosParaAtualizar)
+            });
+            if (!response.ok) throw new Error('Falha ao atualizar o funcionário.');
+
+            funcionarioAtual = await response.json();
+            preencherDadosNaTela(funcionarioAtual);
+            toggleEditMode();
+            alert('Dados do funcionário atualizados com sucesso!');
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function inativarFuncionario(id) {
+        if (!confirm('Tem certeza que deseja INATIVAR este funcionário?')) return;
+        try {
+            const response = await fetch(`/funcionarios/${id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Falha ao inativar o funcionário.');
+
+            alert('Funcionário inativado com sucesso!');
+            funcionarioAtual.ativo = false;
+            preencherDadosNaTela(funcionarioAtual);
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function ativarFuncionario(id) {
+        if (!confirm('Tem certeza que deseja REATIVAR este funcionário?')) return;
+        try {
+            const response = await fetch(`/funcionarios/${id}/ativar`, { method: 'PATCH' });
+            if (!response.ok) throw new Error('Falha ao reativar o funcionário.');
+
+            alert('Funcionário reativado com sucesso!');
+            funcionarioAtual.ativo = true;
+            preencherDadosNaTela(funcionarioAtual);
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    // #### FUNÇÕES DE ESPECIALIDADE ####
+    async function carregarTodasEspecialidades() {
+        try {
+            const response = await fetch('/especialidades');
+            todasEspecialidades = await response.json();
+        } catch (error) {
+            console.error("Falha ao carregar especialidades.", error);
+        }
+    }
+
     function renderizarBadgesEspecialidades(especialidadesDoFisio) {
         const container = document.getElementById('lista-especialidades-badges');
         container.innerHTML = '';
@@ -199,7 +262,6 @@
         const container = document.getElementById('checkbox-container-especialidades');
         container.innerHTML = '';
         const idsAtuais = new Set(especialidadesDoFisio.map(e => e.idEspecialidade));
-
         todasEspecialidades.forEach(esp => {
             const isChecked = idsAtuais.has(esp.idEspecialidade) ? 'checked' : '';
             container.innerHTML += `
@@ -215,7 +277,6 @@
         const idsSelecionados = Array.from(checkboxes).map(cb => parseInt(cb.value));
         const resultadoDiv = document.getElementById('resultadoModal');
         resultadoDiv.innerHTML = '';
-
         try {
             const response = await fetch(`/funcionarios/${funcionarioId}/especialidades`, {
                 method: 'PUT',
@@ -225,7 +286,6 @@
             if (!response.ok) throw new Error('Falha ao atualizar especialidades.');
 
             const fisioAtualizado = await response.json();
-            // Atualiza os dados na tela principal
             funcionarioAtual.especialidades = fisioAtualizado.especialidades;
             renderizarBadgesEspecialidades(fisioAtualizado.especialidades);
 
