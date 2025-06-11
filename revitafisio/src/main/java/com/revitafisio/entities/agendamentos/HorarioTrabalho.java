@@ -2,32 +2,27 @@ package com.revitafisio.entities.agendamentos;
 
 import com.revitafisio.entities.usuarios.Usuario;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.time.LocalDate;
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Entity(name = "horarios_disponiveis")
-@Table(name = "horarios_disponiveis")
-public class HorarioDisponivel {
+@Entity
+@Table(name = "horarios_trabalho")
+public class HorarioTrabalho {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_horario")
-    private Integer idHorario;
+    @Column(name = "id_horario_trabalho")
+    private Integer id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_fisioterapeuta", nullable = false)
     private Usuario fisioterapeuta;
 
-    @Column(nullable = false)
-    private LocalDate data;
+    // REMOVA a anotação @Enumerated. O @Converter(autoApply=true) cuidará disso.
+    @Column(name = "dia_semana", nullable = false)
+    private DayOfWeek diaDaSemana;
 
     @Column(name = "hora_inicio", nullable = false)
     private LocalTime horaInicio;
@@ -35,5 +30,5 @@ public class HorarioDisponivel {
     @Column(name = "hora_fim", nullable = false)
     private LocalTime horaFim;
 
-    private boolean disponivel;
+    private boolean ativo = true;
 }

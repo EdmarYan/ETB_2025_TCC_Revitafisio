@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Funcionários - Revitafisio</title>
+  <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/dashboard.html">Revitafisio</a>
+    <ul class="navbar-nav ms-auto">
+      <li class="nav-item"><a class="nav-link" href="#" id="logoutButton">Sair</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Funcionários Cadastrados</h2>
+    <a href="/cadastro-funcionario.html" class="btn btn-primary">Cadastrar Novo Funcionário</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div id="loading" class="text-center">
+        <div class="spinner-border" role="status"><span class="visually-hidden">Carregando...</span></div>
+      </div>
+      <ul class="list-group" id="listaFuncionarios">
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    carregarFuncionarios();
+    document.getElementById('logoutButton').addEventListener('click', () => {
+      localStorage.removeItem('usuarioLogado');
+      window.location.href = '/';
+    });
+  });
+
+  async function carregarFuncionarios() {
+    const listaEl = document.getElementById('listaFuncionarios');
+    const loadingEl = document.getElementById('loading');
+
+    try {
+      const response = await fetch('/funcionarios');
+      if (!response.ok) throw new Error('Falha ao buscar dados.');
+
+      const funcionarios = await response.json();
+
+      loadingEl.style.display = 'none';
+      listaEl.innerHTML = '';
+
+      if (funcionarios.length === 0) {
+        listaEl.innerHTML = '<li class="list-group-item">Nenhum funcionário cadastrado.</li>';
+        return;
+      }
+
+      funcionarios.forEach(func => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.innerHTML = `
+                    <div>
+                        <strong>${func.nome}</strong>
+                        <small class="d-block text-muted">Cargo: ${func.tipo}</small>
+                    </div>
+                    <a href="/prontuario-funcionario.html?id=${func.id}" class="btn btn-sm btn-outline-secondary">Ver Detalhes</a>
+                `;
+        listaEl.appendChild(li);
+      });
+
+    } catch (error) {
+      loadingEl.style.display = 'none';
+      listaEl.innerHTML = `<li class="list-group-item text-danger">Erro ao carregar funcionários: ${error.message}</li>`;
+    }
+  }
+</script>
+
+</body>
+</html>

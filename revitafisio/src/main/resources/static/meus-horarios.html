@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Horários de Trabalho - Revitafisio</title>
+    <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/dashboard.html">Revitafisio</a>
+        <ul class="navbar-nav ms-auto"><li class="nav-item"><a class="nav-link" href="#" id="logoutButton">Sair</a></li></ul>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2 id="welcomeHeader">Meus Horários de Trabalho</h2>
+    <p>Defina sua grade de horários semanal recorrente. A agenda do mês será gerada com base nestes horários.</p>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header">
+                    Grade Semanal
+                </div>
+                <div class="card-body">
+                    <div id="loading" class="text-center">
+                        <div class="spinner-border" role="status"><span class="visually-hidden">Carregando...</span></div>
+                    </div>
+                    <ul class="list-group" id="listaHorarios">
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    Adicionar Novo Horário
+                </div>
+                <div class="card-body">
+                    <form id="formNovoHorario">
+                        <div class="mb-3">
+                            <label for="diaDaSemana" class="form-label">Dia da Semana</label>
+                            <select id="diaDaSemana" class="form-select" required>
+                                <option value="" disabled selected>Selecione um dia...</option>
+                                <option value="MONDAY">Segunda-feira</option>
+                                <option value="TUESDAY">Terça-feira</option>
+                                <option value="WEDNESDAY">Quarta-feira</option>
+                                <option value="THURSDAY">Quinta-feira</option>
+                                <option value="FRIDAY">Sexta-feira</option>
+                                <option value="SATURDAY">Sábado</option>
+                                <option value="SUNDAY">Domingo</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label for="horaInicio" class="form-label">Início</label>
+                                <input type="time" id="horaInicio" class="form-control" step="1800" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label for="horaFim" class="form-label">Fim</label>
+                                <input type="time" id="horaFim" class="form-control" step="1800" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Adicionar à Grade</button>
+                    </form>
+                    <div id="resultadoAdicao" class="mt-3"></div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    Gerar Agenda Mensal
+                </div>
+                <div class="card-body">
+                    <p class="card-text small">Use sua grade semanal para criar os horários disponíveis para um mês inteiro.</p>
+                    <div class="row g-2">
+                        <div class="col-sm-7">
+                            <input type="month" id="mesAnoInput" class="form-control">
+                        </div>
+                        <div class="col-sm-5">
+                            <button class="btn btn-success w-100" id="gerarAgendaBtn">Gerar</button>
+                        </div>
+                    </div>
+                    <div id="resultadoGeracao" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let usuarioLogado;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const dadosUsuario = JSON.parse(localStorage.getItem('usuarioLogado'));
+        if (!dadosUsuario || dadosUsuario.tipoUsuario !== 'FISIOTERAPEUTA') {
+            alert('Acesso negado. Esta página é apenas para Fisioterapeutas.');
+            window.location.href = '/dashboard.html';
+            return;
+        }
+        usuarioLogado = dadosUsuario;
+        document.getElementById('welcomeHeader').textContent = `Meus Horários de Trabalho - ${usuarioLogado.nome}`;
+        carregarHorarios();
+        const hoje = new Date();
+        const mes = (hoje.getMonth() + 1).toString().padStart(2, '0');
+        const ano = hoje.getFullYear();
+        document.getElementById('mesAnoInput').value = `${ano}-${mes}`;
+        document.getElementById('formNovoHorario').addEventListener('submit', adicionarHorario);
+        document.getElementById('gerarAgendaBtn').addEventListener('click', gerarAgenda);
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('usuarioLogado');
+            window.location.href = '/';
+        });
+    });
+
+    // Função para criar o elemento da lista (para evitar repetição de código)
+    function criarElementoHorario(horario) {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.id = `horario-${horario.id}`; // Adiciona um ID para remoção
+        li.innerHTML = `
+            <span><strong>${horario.nomeDiaSemana}:</strong> das ${horario.horaInicio.substring(0,5)} às ${horario.horaFim.substring(0,5)}</span>
+            <button class="btn btn-sm btn-outline-danger" onclick="removerHorario(${horario.id})">&times;</button>
+        `;
+        return li;
+    }
+
+    async function carregarHorarios() {
+        const listaEl = document.getElementById('listaHorarios');
+        const loadingEl = document.getElementById('loading');
+        loadingEl.style.display = 'block';
+        listaEl.innerHTML = '';
+        try {
+            const response = await fetch(`/horarios-trabalho/fisioterapeuta/${usuarioLogado.usuarioId}`);
+            if (!response.ok) throw new Error('Falha ao carregar horários.');
+            const horarios = await response.json();
+            if (horarios.length === 0) {
+                listaEl.innerHTML = '<li class="list-group-item" id="horario-placeholder">Nenhum horário de trabalho definido.</li>';
+            } else {
+                horarios.sort((a, b) => a.diaDaSemana.localeCompare(b.diaDaSemana) || a.horaInicio.localeCompare(b.horaInicio));
+                horarios.forEach(h => {
+                    listaEl.appendChild(criarElementoHorario(h));
+                });
+            }
+        } catch (error) {
+            listaEl.innerHTML = `<li class="list-group-item text-danger">${error.message}</li>`;
+        } finally {
+            loadingEl.style.display = 'none';
+        }
+    }
+
+    // ##### FUNÇÃO ATUALIZADA #####
+    async function adicionarHorario(event) {
+        event.preventDefault();
+        const resultadoDiv = document.getElementById('resultadoAdicao');
+        const requestBody = {
+            idFisioterapeuta: usuarioLogado.usuarioId,
+            diaDaSemana: document.getElementById('diaDaSemana').value,
+            horaInicio: document.getElementById('horaInicio').value,
+            horaFim: document.getElementById('horaFim').value,
+        };
+        if (!requestBody.diaDaSemana) {
+            alert('Por favor, selecione um dia da semana.');
+            return;
+        }
+        resultadoDiv.className = '';
+        resultadoDiv.textContent = '';
+        try {
+            const response = await fetch('/horarios-trabalho', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+            if(!response.ok) throw new Error('Não foi possível adicionar o horário.');
+
+            // --- INÍCIO DA MUDANÇA ---
+            const novoHorario = await response.json(); // Pega o horário criado da resposta da API
+            const listaEl = document.getElementById('listaHorarios');
+
+            // Remove a mensagem "Nenhum horário definido", se ela existir
+            const placeholder = document.getElementById('horario-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+
+            // Adiciona o novo item na lista sem recarregar a página
+            listaEl.appendChild(criarElementoHorario(novoHorario));
+
+            // Reordena a lista na tela (opcional, mas melhora a UX)
+            const items = Array.from(listaEl.children);
+            items.sort((a, b) => a.textContent.localeCompare(b.textContent));
+            items.forEach(item => listaEl.appendChild(item));
+
+            // Limpa o formulário e mostra mensagem de sucesso
+            document.getElementById('formNovoHorario').reset();
+            resultadoDiv.className = 'alert alert-success mt-3';
+            resultadoDiv.textContent = 'Horário adicionado com sucesso!';
+            // --- FIM DA MUDANÇA ---
+
+        } catch (error) {
+            resultadoDiv.className = 'alert alert-danger mt-3';
+            resultadoDiv.textContent = error.message;
+        }
+    }
+
+    async function removerHorario(id) {
+        if (!confirm('Tem certeza que deseja remover este horário da sua grade?')) return;
+        try {
+            const response = await fetch(`/horarios-trabalho/${id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Falha ao remover o horário.');
+
+            // Remove dinamicamente o item da lista
+            document.getElementById(`horario-${id}`).remove();
+
+            // Se a lista ficar vazia, adiciona o placeholder de volta
+            const listaEl = document.getElementById('listaHorarios');
+            if (listaEl.children.length === 0) {
+                listaEl.innerHTML = '<li class="list-group-item" id="horario-placeholder">Nenhum horário de trabalho definido.</li>';
+            }
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function gerarAgenda() {
+        if (!confirm('Isso irá apagar e recriar toda a sua agenda para o mês selecionado. Deseja continuar?')) return;
+        const mesAno = document.getElementById('mesAnoInput').value;
+        const [ano, mes] = mesAno.split('-');
+        const resultadoDiv = document.getElementById('resultadoGeracao');
+        const btn = document.getElementById('gerarAgendaBtn');
+        btn.disabled = true;
+        resultadoDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Gerando...';
+        resultadoDiv.className = 'alert alert-info mt-3';
+        try {
+            const response = await fetch(`/horarios-trabalho/gerar-disponibilidade?idFisioterapeuta=${usuarioLogado.usuarioId}&ano=${ano}&mes=${mes}`, {
+                method: 'POST'
+            });
+            if (!response.ok) {
+                const erro = await response.text();
+                throw new Error(erro || 'Falha ao gerar agenda.');
+            }
+            resultadoDiv.className = 'alert alert-success mt-3';
+            resultadoDiv.textContent = 'Agenda gerada com sucesso para ' + mesAno.split('-').reverse().join('/') + '!';
+        } catch (error) {
+            resultadoDiv.className = 'alert alert-danger mt-3';
+            resultadoDiv.textContent = error.message;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>

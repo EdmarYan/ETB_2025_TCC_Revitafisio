@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prontuário do Paciente - Revitafisio</title>
-    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
     <style>
-        /* ATUALIZADO: !important para garantir sobreposição */
         .hidden { display: none !important; }
+        .evolution-entry { border-left: 3px solid #0d6efd; }
     </style>
 </head>
 <body>
@@ -27,42 +27,61 @@
     <div id="patient-details" class="d-none">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 id="nomePacienteView"></h2>
-            <div>
+            <div id="botoes-edicao-paciente">
                 <button class="btn btn-secondary" id="editButton">Editar</button>
                 <button class="btn btn-success hidden" id="saveButton">Salvar</button>
                 <button class="btn btn-danger hidden" id="cancelButton">Cancelar</button>
-                <!-- BOTÕES DE STATUS ATUALIZADOS -->
-                <button class="btn btn-danger hidden" id="inativarBtn">Inativar</button>
+                <button class="btn btn-danger" id="inativarBtn">Inativar</button>
                 <button class="btn btn-success hidden" id="ativarBtn">Reativar</button>
             </div>
         </div>
         <hr>
-
         <div id="viewMode">
             <p><strong>CPF:</strong> <span id="cpfPaciente"></span></p>
             <p><strong>Data de Nascimento:</strong> <span id="nascimentoPaciente"></span></p>
             <p><strong>Status:</strong> <span id="statusPaciente" class="badge"></span></p>
         </div>
-
         <form id="editMode" class="hidden">
-            <div class="mb-3">
-                <label for="nomeInput" class="form-label">Nome</label>
-                <input type="text" class="form-control" id="nomeInput">
-            </div>
-            <div class="mb-3">
-                <label for="nascimentoInput" class="form-label">Data de Nascimento</label>
-                <input type="date" class="form-control" id="nascimentoInput">
-            </div>
+            <div class="mb-3"><label for="nomeInput" class="form-label">Nome</label><input type="text" class="form-control" id="nomeInput"></div>
+            <div class="mb-3"><label for="nascimentoInput" class="form-label">Data de Nascimento</label><input type="date" class="form-control" id="nascimentoInput"></div>
         </form>
-
         <div id="resultado" class="mt-3"></div>
+
+        <div class="card mt-5" id="card-avaliacoes">
+            <div class="card-header"><h5 class="mb-0">Avaliações Clínicas</h5></div>
+            <div class="card-body">
+                <p>Gerencie as fichas de avaliação específicas para cada especialidade.</p>
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center" id="container-avaliacao-ortopedia">Carregando...</li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center" id="container-avaliacao-rpg">Carregando...</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mt-5">
+            <div class="card-header"><h5 class="mb-0">Evolução do Paciente</h5></div>
+            <div class="card-body">
+                <form id="formNovaEvolucao">
+                    <div class="mb-3">
+                        <label for="descricaoEvolucao" class="form-label">Nova Anotação de Evolução</label>
+                        <textarea id="descricaoEvolucao" class="form-control" rows="4" placeholder="Descreva aqui o progresso do paciente na sessão de hoje..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Salvar Evolução</button>
+                    <div id="resultadoEvolucao" class="mt-2"></div>
+                </form>
+                <hr class="my-4">
+                <h6 class="mb-3">Histórico de Evoluções</h6>
+                <div id="historicoEvolucoes"></div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const pacienteId = urlParams.get('pacienteId');
-    let pacienteAtual = {}; // Para guardar os dados do paciente carregado
+    let pacienteAtual = {};
+    let usuarioLogado;
 
     // Elementos da página
     const viewMode = document.getElementById('viewMode');
@@ -74,34 +93,136 @@
     const ativarBtn = document.getElementById('ativarBtn');
 
     document.addEventListener('DOMContentLoaded', function() {
+        usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
         if (!pacienteId) {
             alert('ID do paciente não fornecido.');
             window.location.href = '/dashboard.html';
             return;
         }
-        carregarDadosPaciente(pacienteId);
 
-        // Adiciona funcionalidade aos botões
+        carregarDadosPaciente(pacienteId);
+        carregarEvolucoes(pacienteId);
+        carregarStatusAvaliacoes();
+        configurarVisibilidadePorPerfil();
+
         editButton.addEventListener('click', toggleEditMode);
         saveButton.addEventListener('click', salvarAlteracoes);
-        cancelButton.addEventListener('click', toggleEditMode);
+        cancelButton.addEventListener('click', () => { toggleEditMode(); preencherDadosNaTela(pacienteAtual); });
         inativarBtn.addEventListener('click', () => inativarPaciente(pacienteId));
-        ativarBtn.addEventListener('click', () => ativarPaciente(pacienteId)); // NOVO LISTENER
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            localStorage.removeItem('usuarioLogado');
-            window.location.href = '/';
-        });
+        ativarBtn.addEventListener('click', () => ativarPaciente(pacienteId));
+        document.getElementById('logoutButton').addEventListener('click', () => { localStorage.removeItem('usuarioLogado'); window.location.href = '/'; });
+        document.getElementById('formNovaEvolucao').addEventListener('submit', salvarEvolucao);
     });
 
-    // READ - Função para carregar os dados do paciente da API
+    function configurarVisibilidadePorPerfil() {
+        if (!usuarioLogado) return;
+
+        const isFisio = usuarioLogado.tipoUsuario === 'FISIOTERAPEUTA';
+        const isAdmin = usuarioLogado.tipoUsuario === 'ADMIN';
+        const isRecepcionista = usuarioLogado.tipoUsuario === 'RECEPCIONISTA';
+
+        // Formulário e card de avaliações só aparecem para fisioterapeutas
+        document.getElementById('formNovaEvolucao').style.display = isFisio ? 'block' : 'none';
+        document.getElementById('card-avaliacoes').style.display = isFisio ? 'block' : 'none';
+
+        // Botões de edição de paciente só aparecem para Admins
+        document.getElementById('botoes-edicao-paciente').style.display = isAdmin ? 'flex' : 'none';
+    }
+
+    async function carregarStatusAvaliacoes() {
+        // Ortopedia
+        try {
+            const responseOrto = await fetch(`/avaliacoes/ortopedia/paciente/${pacienteId}`);
+            const containerOrto = document.getElementById('container-avaliacao-ortopedia');
+            if (responseOrto.ok) {
+                const avaliacao = await responseOrto.json();
+                const dataFormatada = new Date(avaliacao.dataAvaliacao + 'T00:00:00').toLocaleDateString('pt-BR');
+                containerOrto.innerHTML = `<span>Avaliação de Ortopedia</span><div><small class="text-muted me-3">Realizada em: ${dataFormatada}</small><a href="avaliacao-ortopedia.html?pacienteId=${pacienteId}" class="btn btn-secondary btn-sm">Ver / Editar</a></div>`;
+            } else {
+                containerOrto.innerHTML = `<span>Avaliação de Ortopedia</span><a href="avaliacao-ortopedia.html?pacienteId=${pacienteId}" class="btn btn-outline-primary btn-sm">Realizar Avaliação</a>`;
+            }
+        } catch (error) {
+            document.getElementById('container-avaliacao-ortopedia').innerHTML = '<span>Avaliação de Ortopedia</span> <span class="text-danger small">Erro ao carregar status</span>';
+        }
+
+        // RPG
+        try {
+            const responseRpg = await fetch(`/avaliacoes/rpg/paciente/${pacienteId}`);
+            const containerRpg = document.getElementById('container-avaliacao-rpg');
+            if (responseRpg.ok) {
+                const avaliacao = await responseRpg.json();
+                const dataFormatada = new Date(avaliacao.dataAvaliacao + 'T00:00:00').toLocaleDateString('pt-BR');
+                containerRpg.innerHTML = `<span>Avaliação de RPG</span><div><small class="text-muted me-3">Realizada em: ${dataFormatada}</small><a href="avaliacao-rpg.html?pacienteId=${pacienteId}" class="btn btn-secondary btn-sm">Ver / Editar</a></div>`;
+            } else {
+                containerRpg.innerHTML = `<span>Avaliação de RPG</span><a href="avaliacao-rpg.html?pacienteId=${pacienteId}" class="btn btn-outline-success btn-sm">Realizar Avaliação</a>`;
+            }
+        } catch (error) {
+            document.getElementById('container-avaliacao-rpg').innerHTML = '<span>Avaliação de RPG</span> <span class="text-danger small">Erro ao carregar status</span>';
+        }
+    }
+
+    async function carregarEvolucoes(idPaciente) {
+        const historicoDiv = document.getElementById('historicoEvolucoes');
+        historicoDiv.innerHTML = '<p>Carregando histórico...</p>';
+        try {
+            const response = await fetch(`/evolucoes/paciente/${idPaciente}`);
+            if (!response.ok) throw new Error('Falha ao carregar o histórico.');
+            const evolucoes = await response.json();
+            if (evolucoes.length === 0) {
+                historicoDiv.innerHTML = '<p class="text-muted">Nenhuma evolução registrada para este paciente.</p>';
+                return;
+            }
+            historicoDiv.innerHTML = '';
+            evolucoes.forEach(evo => {
+                const evoEntry = document.createElement('div');
+                evoEntry.className = 'p-3 mb-3 bg-light rounded evolution-entry';
+                const dataFormatada = new Date(evo.data + 'T00:00:00').toLocaleDateString('pt-BR');
+                evoEntry.innerHTML = `<p class="mb-1">${evo.descricao.replace(/\n/g, '<br>')}</p><small class="text-muted">Registrado por <strong>${evo.nomeFisioterapeuta}</strong> em ${dataFormatada}</small>`;
+                historicoDiv.appendChild(evoEntry);
+            });
+        } catch (error) {
+            historicoDiv.innerHTML = `<p class="text-danger">${error.message}</p>`;
+        }
+    }
+
+    async function salvarEvolucao(event) {
+        event.preventDefault();
+        const resultadoDiv = document.getElementById('resultadoEvolucao');
+        const descricao = document.getElementById('descricaoEvolucao').value;
+        resultadoDiv.innerHTML = '';
+        if (!usuarioLogado || usuarioLogado.tipoUsuario !== 'FISIOTERAPEUTA') {
+            alert('Apenas fisioterapeutas podem salvar evoluções.');
+            return;
+        }
+        const requestBody = {
+            idPaciente: pacienteId,
+            idFisioterapeuta: usuarioLogado.usuarioId,
+            descricao: descricao
+        };
+        try {
+            const response = await fetch('/evolucoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+            if (!response.ok) {
+                const erro = await response.json();
+                throw new Error(erro.message || 'Falha ao salvar a evolução.');
+            }
+            document.getElementById('descricaoEvolucao').value = '';
+            resultadoDiv.innerHTML = '<div class="alert alert-success">Evolução salva com sucesso!</div>';
+            carregarEvolucoes(pacienteId);
+        } catch (error) {
+            resultadoDiv.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+        }
+    }
+
     async function carregarDadosPaciente(id) {
         try {
             const response = await fetch(`/pacientes/${id}`);
             if (!response.ok) throw new Error('Paciente não encontrado.');
-
             pacienteAtual = await response.json();
             preencherDadosNaTela(pacienteAtual);
-
             document.getElementById('loading').classList.add('d-none');
             document.getElementById('patient-details').classList.remove('d-none');
         } catch (error) {
@@ -110,36 +231,27 @@
         }
     }
 
-    // ATUALIZADA: Lógica de exibição dos botões de status
     function preencherDadosNaTela(paciente) {
-        // Modo de visualização
         document.getElementById('nomePacienteView').textContent = paciente.nome;
         document.getElementById('cpfPaciente').textContent = paciente.cpf;
         document.getElementById('nascimentoPaciente').textContent = new Date(paciente.dataNascimento + 'T00:00:00').toLocaleDateString('pt-BR');
         const statusBadge = document.getElementById('statusPaciente');
         statusBadge.className = 'badge';
-
-        // CONTROLE DE BOTÕES ATUALIZADO
         if(paciente.ativo) {
             statusBadge.textContent = 'Ativo';
             statusBadge.classList.add('bg-success');
-            // Mostra inativar e esconde ativar
             inativarBtn.classList.remove('hidden');
             ativarBtn.classList.add('hidden');
         } else {
             statusBadge.textContent = 'Inativo';
             statusBadge.classList.add('bg-danger');
-            // Mostra ativar e esconde inativar
             inativarBtn.classList.add('hidden');
             ativarBtn.classList.remove('hidden');
         }
-
-        // Modo de edição
         document.getElementById('nomeInput').value = paciente.nome;
         document.getElementById('nascimentoInput').value = paciente.dataNascimento;
     }
 
-    // Função para alternar entre modo de visualização e edição
     function toggleEditMode() {
         viewMode.classList.toggle('hidden');
         editMode.classList.toggle('hidden');
@@ -148,35 +260,27 @@
         cancelButton.classList.toggle('hidden');
     }
 
-    // UPDATE - Função para salvar as alterações
     async function salvarAlteracoes() {
         const dadosParaAtualizar = {
             nome: document.getElementById('nomeInput').value,
             dataNascimento: document.getElementById('nascimentoInput').value,
-            contatos: [] // Lógica de contatos pode ser adicionada aqui
+            contatos: []
         };
-
         try {
             const response = await fetch(`/pacientes/${pacienteId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dadosParaAtualizar)
             });
-
             if (response.ok) {
                 pacienteAtual = await response.json();
-                preencherDadosNaTela(pacienteAtual); // Atualiza a tela com os novos dados
-                toggleEditMode(); // Volta para o modo de visualização
+                preencherDadosNaTela(pacienteAtual);
+                toggleEditMode();
                 alert('Paciente atualizado com sucesso!');
-            } else {
-                throw new Error('Falha ao atualizar o paciente.');
-            }
-        } catch (error) {
-            alert(error.message);
-        }
+            } else { throw new Error('Falha ao atualizar o paciente.'); }
+        } catch (error) { alert(error.message); }
     }
 
-    // DELETE - Função para inativar o paciente
     async function inativarPaciente(id) {
         if (!confirm('Tem certeza que deseja inativar este paciente?')) return;
         try {
@@ -184,29 +288,19 @@
             if (response.ok) {
                 alert('Paciente inativado com sucesso!');
                 window.location.href = '/dashboard.html';
-            } else {
-                throw new Error('Falha ao inativar o paciente.');
-            }
-        } catch (error) {
-            alert(error.message);
-        }
+            } else { throw new Error('Falha ao inativar o paciente.'); }
+        } catch (error) { alert(error.message); }
     }
 
-    // NOVA FUNÇÃO: Reativar paciente
     async function ativarPaciente(id) {
         if (!confirm('Tem certeza que deseja reativar este paciente?')) return;
         try {
             const response = await fetch(`/pacientes/${id}/ativar`, { method: 'PATCH' });
             if (response.ok) {
                 alert('Paciente reativado com sucesso!');
-                // Recarrega os dados para atualizar a interface
                 carregarDadosPaciente(id);
-            } else {
-                throw new Error('Falha ao reativar o paciente.');
-            }
-        } catch (error) {
-            alert(error.message);
-        }
+            } else { throw new Error('Falha ao reativar o paciente.'); }
+        } catch (error) { alert(error.message); }
     }
 </script>
 </body>

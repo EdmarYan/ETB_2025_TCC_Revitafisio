@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "avaliacao_rpg")
+@Entity
 @Table(name = "avaliacao_rpg")
 public class AvaliacaoRpg {
 
@@ -34,14 +34,14 @@ public class AvaliacaoRpg {
 
     // --- Campos de Texto ---
     private String diagnostico_clinico;
-    @Lob private String hma;
+    @Column(columnDefinition = "TEXT") private String hma;
     private String posicao_dor;
-    @Lob private String outras_patologias;
+    @Column(columnDefinition = "TEXT") private String outras_patologias;
     private String outros_exames;
     private String medicamentos_descricao;
-    @Lob private String outros_desequilibrios;
-    @Lob private String tratamento_proposto;
-    @Lob private String observacoes;
+    @Column(columnDefinition = "TEXT") private String outros_desequilibrios;
+    @Column(columnDefinition = "TEXT") private String tratamento_proposto;
+    @Column(columnDefinition = "TEXT") private String observacoes;
 
     // --- Campos Booleanos ---
     private boolean ressonancia_magnetica;
@@ -69,5 +69,5 @@ public class AvaliacaoRpg {
     public enum PosicaoJoelhos { VALGO, VARO, NORMAL }
     public enum CurvaturaLombar { HIPERLORDOSE, RETIFICADA, NORMAL }
     public enum PosicaoPelve { ANTEVERSÃO, RETROVERSÃO, NORMAL }
-    public enum PosicaoEscapulas { DIREITA_ALTA, ESQUERDA_ALTA } // Corrigido!
+    public enum PosicaoEscapulas { DIREITA_ALTA, ESQUERDA_ALTA }
 }

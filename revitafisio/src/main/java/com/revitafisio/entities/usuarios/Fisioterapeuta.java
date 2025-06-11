@@ -1,12 +1,11 @@
 package com.revitafisio.entities.usuarios;
 
-import com.revitafisio.entities.usuarios.Especialidade;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.HashSet; // Importe o HashSet
-import java.util.Set;    // Importe o Set
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -14,13 +13,13 @@ import java.util.Set;    // Importe o Set
 @DiscriminatorValue("FISIOTERAPEUTA")
 public class Fisioterapeuta extends Usuario {
 
-    // CAMPO NOVO ADICIONADO AQUI
-    @ManyToMany(fetch = FetchType.EAGER) // EAGER para carregar as especialidades junto com o fisioterapeuta
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "fisioterapeuta_especialidades", // Nome da nova tabela de ligação
-            joinColumns = @JoinColumn(name = "fisioterapeuta_id"), // Coluna que se refere a esta entidade (Fisioterapeuta)
-            inverseJoinColumns = @JoinColumn(name = "especialidade_id") // Coluna que se refere à outra entidade (Especialidade)
+            name = "fisioterapeuta_especialidades",
+            joinColumns = @JoinColumn(name = "fisioterapeuta_id"),
+            inverseJoinColumns = @JoinColumn(name = "especialidade_id")
     )
+    // GARANTA QUE A INICIALIZAÇÃO "new HashSet<>()" ESTEJA AQUI
     private Set<Especialidade> especialidades = new HashSet<>();
 
 }

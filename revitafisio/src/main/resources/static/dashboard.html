@@ -4,12 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Revitafisio</title>
-    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
     <style>
         body { background-color: #f8f9fa; }
         .welcome-jumbotron { background-color: #e9ecef; }
-        #listaResultados a { text-decoration: none; }
-        #listaResultados a:hover { text-decoration: underline; }
+        .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+        .card-body .btn-group, .card-body .btn {
+            margin-top: auto; /* Alinha o botão na parte inferior do card */
+        }
     </style>
 </head>
 <body>
@@ -33,9 +38,9 @@
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
+    <div class="row mb-4 g-4">
+        <div class="col-md-4" id="card-pacientes" style="display: none;">
+            <div class="card h-100">
                 <div class="card-body">
                     <h5 class="card-title">Pacientes</h5>
                     <p class="card-text">Adicione novos pacientes ao sistema ou busque por registros existentes.</p>
@@ -43,12 +48,31 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card">
+        <div class="col-md-4" id="card-funcionarios" style="display: none;">
+            <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Funcionários</h5>
-                    <p class="card-text">Gerencie os usuários do sistema, como fisioterapeutas e administradores.</p>
-                    <a href="/cadastro-funcionario.html" class="btn btn-secondary">Cadastrar Novo Funcionário</a>
+                    <h5 class="card-title">Equipe</h5>
+                    <p class="card-text">Gerencie os usuários do sistema ou sua própria agenda de trabalho.</p>
+                    <div class="btn-group" id="botoesFuncionario">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4" id="card-agenda" style="display: none;">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Agenda</h5>
+                    <p class="card-text">Visualize, agende e gerencie as consultas da clínica.</p>
+                    <a href="/agenda.html" class="btn btn-success">Acessar Agenda</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4" id="card-relatorios" style="display: none;">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Relatórios</h5>
+                    <p class="card-text">Acesse dados e métricas de desempenho da clínica.</p>
+                    <a href="/relatorios.html" class="btn btn-info">Ver Relatórios</a>
                 </div>
             </div>
         </div>
@@ -59,75 +83,92 @@
             <h5 class="card-title">Buscar Paciente</h5>
             <form id="formBuscaPaciente">
                 <div class="input-group">
-                    <input type="text" class="form-control" id="nomeBusca" placeholder="Digite o nome do paciente para buscar..." required>
+                    <input type="text" class="form-control" id="nomeBusca" placeholder="Digite o nome do paciente para buscar...">
                     <button class="btn btn-outline-primary" type="submit">Buscar</button>
                 </div>
             </form>
             <div class="mt-3" id="areaResultados">
-                <ul class="list-group" id="listaResultados">
-                </ul>
+                <ul class="list-group" id="listaResultados"></ul>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Esta função roda assim que a página carrega
     document.addEventListener('DOMContentLoaded', function() {
         const dadosUsuario = JSON.parse(localStorage.getItem('usuarioLogado'));
 
         if (!dadosUsuario || !dadosUsuario.nome) {
             window.location.href = '/';
-        } else {
-            document.getElementById('welcomeMessage').textContent = `Bem-vindo(a), ${dadosUsuario.nome}!`;
+            return;
         }
 
-        // Adiciona a funcionalidade de "Sair" ao botão
-        document.getElementById('logoutButton').addEventListener('click', function(e) {
+        document.getElementById('welcomeMessage').textContent = `Bem-vindo(a), ${dadosUsuario.nome}!`;
+
+        configurarVisibilidade(dadosUsuario.tipoUsuario);
+
+        document.getElementById('logoutButton').addEventListener('click', (e) => {
             e.preventDefault();
             localStorage.removeItem('usuarioLogado');
             window.location.href = '/';
         });
 
-        // Adiciona a funcionalidade de busca ao formulário
-        document.getElementById('formBuscaPaciente').addEventListener('submit', function(e) {
+        document.getElementById('formBuscaPaciente').addEventListener('submit', (e) => {
             e.preventDefault();
             buscarPacientesPorNome();
         });
 
-        // CHAMA A NOVA FUNÇÃO PARA CARREGAR OS PACIENTES INICIAIS
         carregarPacientesIniciais();
     });
 
-    // NOVA FUNÇÃO para carregar todos os pacientes ao abrir a página
+    function configurarVisibilidade(tipoUsuario) {
+        const cardPacientes = document.getElementById('card-pacientes');
+        const cardFuncionarios = document.getElementById('card-funcionarios');
+        const cardAgenda = document.getElementById('card-agenda');
+        const cardRelatorios = document.getElementById('card-relatorios');
+        const botoesFuncionario = document.getElementById('botoesFuncionario');
+
+        // Lógica de visibilidade dos cards
+        if (tipoUsuario === 'ADMIN') {
+            cardPacientes.style.display = 'block';
+            cardFuncionarios.style.display = 'block';
+            cardAgenda.style.display = 'block';
+            cardRelatorios.style.display = 'block';
+            botoesFuncionario.innerHTML = `
+                <a href="/cadastro-funcionario.html" class="btn btn-primary">Cadastrar</a>
+                <a href="/funcionarios.html" class="btn btn-secondary">Gerenciar</a>
+            `;
+        } else if (tipoUsuario === 'RECEPCIONISTA') {
+            cardPacientes.style.display = 'block';
+            cardAgenda.style.display = 'block';
+        } else if (tipoUsuario === 'FISIOTERAPEUTA') {
+            cardFuncionarios.style.display = 'block';
+            cardAgenda.style.display = 'block';
+            botoesFuncionario.innerHTML = `<a href="/meus-horarios.html" class="btn btn-info">Meus Horários de Trabalho</a>`;
+        }
+    }
+
     async function carregarPacientesIniciais() {
-        // Usamos a mesma lógica da busca, mas chamamos a API sem parâmetros
         await buscarPacientesNaApi('/pacientes');
     }
 
-    // Função para buscar pacientes pelo nome digitado
     async function buscarPacientesPorNome() {
         const nome = document.getElementById('nomeBusca').value;
-        if (nome.length < 2) {
-            document.getElementById('listaResultados').innerHTML = '<li class="list-group-item">Digite ao menos 2 caracteres.</li>';
+        if (!nome || nome.length < 2) {
+            carregarPacientesIniciais(); // Se a busca for vazia, carrega todos
             return;
         }
-        // Usamos a mesma lógica, mas passamos o nome como parâmetro
         await buscarPacientesNaApi(`/pacientes?nome=${encodeURIComponent(nome)}`);
     }
 
-    // FUNÇÃO CENTRALIZADA para chamar a API e renderizar a lista
     async function buscarPacientesNaApi(url) {
         const listaResultados = document.getElementById('listaResultados');
         listaResultados.innerHTML = '<li class="list-group-item">Buscando...</li>';
-
         try {
             const response = await fetch(url);
-
             if (response.ok) {
                 const pacientes = await response.json();
                 listaResultados.innerHTML = '';
-
                 if (pacientes.length > 0) {
                     pacientes.forEach(paciente => {
                         const li = document.createElement('li');

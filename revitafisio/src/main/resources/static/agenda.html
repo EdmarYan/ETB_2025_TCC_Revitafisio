@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda - Revitafisio</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <style>
+        .time-slot {
+            cursor: pointer;
+            border: 1px solid #198754;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s, color 0.2s;
+            background-color: #d1e7dd; /* Verde para disponível */
+            color: #0a3622;
+            font-weight: 500;
+        }
+        .time-slot:hover {
+            background-color: #b_d_8_f_8_d; /* Verde mais escuro no hover */
+            border-color: #146c43;
+        }
+        .time-slot.booked {
+            background-color: #f8d7da; /* Vermelho para ocupado */
+            color: #58151c;
+            cursor: not-allowed;
+            border-color: #f1aeb5;
+            text-decoration: line-through;
+        }
+        .time-slot.booked:hover {
+            background-color: #f1aeb5;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/dashboard.html">Revitafisio</a>
+        <ul class="navbar-nav ms-auto"><li class="nav-item"><a class="nav-link" href="#" id="logoutButton">Sair</a></li></ul>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2>Agenda de Consultas</h2>
+    <p>Selecione um profissional e uma data para visualizar os horários e agendar consultas.</p>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="fisioterapeutaSelect" class="form-label">Fisioterapeuta</label>
+                    <select id="fisioterapeutaSelect" class="form-select"></select>
+                </div>
+                <div class="col-md-4">
+                    <label for="dataSelect" class="form-label">Data</label>
+                    <input type="date" id="dataSelect" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <button id="buscarAgendaBtn" class="btn btn-primary w-100">Visualizar Agenda</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="text-center d-none">
+        <div class="spinner-border" role="status"><span class="visually-hidden">Carregando...</span></div>
+    </div>
+
+    <div id="agenda-container" class="row">
+    </div>
+</div>
+
+<div class="modal fade" id="agendamentoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Novo Agendamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formAgendamento">
+                    <div class="mb-3">
+                        <strong>Profissional:</strong> <span id="modalFisioNome"></span><br>
+                        <strong>Horário:</strong> <span id="modalHorario"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pacienteSelect" class="form-label">Paciente</label>
+                        <select id="pacienteSelect" class="form-select" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="especialidadeSelect" class="form-label">Especialidade</label>
+                        <select id="especialidadeSelect" class="form-select" required></select>
+                    </div>
+                </form>
+                <div id="resultadoModal" class="mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmarAgendamentoBtn">Confirmar Agendamento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+    let todosPacientes = [];
+    let todasEspecialidades = [];
+    let agendamentoModalInstance;
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        agendamentoModalInstance = new bootstrap.Modal(document.getElementById('agendamentoModal'));
+        await Promise.all([carregarFisioterapeutas(), carregarPacientes(), carregarEspecialidades()]);
+        document.getElementById('dataSelect').valueAsDate = new Date();
+        document.getElementById('buscarAgendaBtn').addEventListener('click', renderizarAgenda);
+        document.getElementById('confirmarAgendamentoBtn').addEventListener('click', confirmarAgendamento);
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('usuarioLogado');
+            window.location.href = '/';
+        });
+    });
+
+    // Funções de Carregamento de Dados Iniciais
+    async function carregarFisioterapeutas() {
+        try {
+            const select = document.getElementById('fisioterapeutaSelect');
+            const response = await fetch('/funcionarios');
+            const funcionarios = await response.json();
+            const fisios = funcionarios.filter(f => f.tipo === 'FISIOTERAPEUTA');
+            if (fisios.length === 0) {
+                select.add(new Option('Nenhum fisioterapeuta encontrado', ''));
+            } else {
+                fisios.forEach(f => select.add(new Option(f.nome, f.id)));
+            }
+        } catch (error) {
+            console.error('Erro ao carregar fisioterapeutas:', error);
+        }
+    }
+
+    async function carregarPacientes() {
+        try {
+            const response = await fetch('/pacientes');
+            todosPacientes = await response.json();
+        } catch (error) {
+            console.error('Erro ao carregar pacientes:', error);
+        }
+    }
+
+    async function carregarEspecialidades() {
+        try {
+            const response = await fetch('/especialidades');
+            todasEspecialidades = await response.json();
+        } catch (error) {
+            console.error('Erro ao carregar especialidades:', error);
+        }
+    }
+
+    // Lógica da Agenda - TOTALMENTE ATUALIZADA
+    async function renderizarAgenda() {
+        const fisioId = document.getElementById('fisioterapeutaSelect').value;
+        const data = document.getElementById('dataSelect').value;
+        const container = document.getElementById('agenda-container');
+        const loadingEl = document.getElementById('loading');
+
+        if (!fisioId) {
+            alert('Por favor, selecione um fisioterapeuta.');
+            return;
+        }
+
+        container.innerHTML = '';
+        loadingEl.classList.remove('d-none');
+
+        try {
+            // AQUI ESTÁ A MUDANÇA: Buscamos os horários direto da nova API
+            const response = await fetch(`/horarios-disponiveis?idFisioterapeuta=${fisioId}&data=${data}`);
+            if (!response.ok) {
+                const erroTexto = await response.text();
+                throw new Error(erroTexto || "Não foi possível carregar os horários. Verifique se a agenda do mês foi gerada para este profissional.");
+            }
+
+            const horariosDoDia = await response.json();
+
+            if (horariosDoDia.length === 0) {
+                container.innerHTML = '<div class="alert alert-warning col-12">Nenhum horário de trabalho encontrado para este profissional na data selecionada. Gere a agenda em "Meus Horários".</div>';
+                return;
+            }
+
+            // Renderiza cada slot com base no status 'disponivel'
+            horariosDoDia.sort((a,b) => a.horaInicio.localeCompare(b.horaInicio));
+            horariosDoDia.forEach(horario => {
+                const slotWrapper = document.createElement('div');
+                slotWrapper.className = 'col-md-2 col-sm-4 col-6'; // Layout responsivo
+                const slotDiv = document.createElement('div');
+                slotDiv.className = 'time-slot text-center';
+                slotDiv.textContent = horario.horaInicio.substring(0, 5);
+
+                if (horario.disponivel) {
+                    slotDiv.onclick = () => abrirModalAgendamento(horario.horaInicio, horario.horaFim);
+                } else {
+                    slotDiv.classList.add('booked');
+                    slotDiv.textContent += ' - Ocupado';
+                }
+                slotWrapper.appendChild(slotDiv);
+                container.appendChild(slotWrapper);
+            });
+        } catch(error) {
+            container.innerHTML = `<div class="alert alert-danger col-12">${error.message}</div>`;
+        } finally {
+            loadingEl.classList.add('d-none');
+        }
+    }
+
+    function abrirModalAgendamento(horaInicio, horaFim) {
+        preencherModalDropdowns();
+        const fisioNome = document.getElementById('fisioterapeutaSelect').options[document.getElementById('fisioterapeutaSelect').selectedIndex].text;
+        const dataFormatada = new Date(document.getElementById('dataSelect').value + 'T00:00:00').toLocaleDateString('pt-BR');
+
+        document.getElementById('modalTitle').textContent = `Novo Agendamento`;
+        document.getElementById('modalFisioNome').textContent = fisioNome;
+        document.getElementById('modalHorario').textContent = `${dataFormatada} das ${horaInicio.substring(0,5)} às ${horaFim.substring(0,5)}`;
+
+        const form = document.getElementById('formAgendamento');
+        form.dataset.horaInicio = horaInicio;
+        form.dataset.horaFim = horaFim;
+
+        document.getElementById('resultadoModal').innerHTML = '';
+        agendamentoModalInstance.show();
+    }
+
+    function preencherModalDropdowns() {
+        const pacienteSelect = document.getElementById('pacienteSelect');
+        pacienteSelect.innerHTML = '<option value="">Selecione...</option>';
+        todosPacientes.forEach(p => pacienteSelect.add(new Option(p.nome, p.id)));
+
+        const especialidadeSelect = document.getElementById('especialidadeSelect');
+        especialidadeSelect.innerHTML = '<option value="">Selecione...</option>';
+        todasEspecialidades.forEach(e => especialidadeSelect.add(new Option(e.nome, e.idEspecialidade)));
+    }
+
+    async function confirmarAgendamento() {
+        const resultadoDiv = document.getElementById('resultadoModal');
+        resultadoDiv.innerHTML = '';
+
+        const form = document.getElementById('formAgendamento');
+        const data = document.getElementById('dataSelect').value;
+        const horaInicio = form.dataset.horaInicio;
+        const horaFim = form.dataset.horaFim;
+
+        const requestBody = {
+            idPaciente: document.getElementById('pacienteSelect').value,
+            idFisioterapeuta: document.getElementById('fisioterapeutaSelect').value,
+            idEspecialidade: document.getElementById('especialidadeSelect').value,
+            dataHoraInicio: `${data}T${horaInicio}`,
+            dataHoraFim: `${data}T${horaFim}`
+        };
+
+        if(!requestBody.idPaciente || !requestBody.idEspecialidade) {
+            alert('Por favor, selecione o paciente e a especialidade.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/agendamentos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+
+            if(!response.ok) {
+                const erro = await response.json();
+                throw new Error(erro.message || 'Não foi possível realizar o agendamento.');
+            }
+
+            alert('Agendamento realizado com sucesso!');
+            agendamentoModalInstance.hide();
+            renderizarAgenda(); // Atualiza a visualização da agenda
+        } catch(error) {
+            resultadoDiv.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+        }
+    }
+</script>
+
+</body>
+</html>

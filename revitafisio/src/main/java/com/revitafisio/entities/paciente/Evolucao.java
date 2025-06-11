@@ -33,7 +33,7 @@ public class Evolucao {
     private LocalDate data;
 
     @Lob
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String descricao;
 
     private boolean preenchida;

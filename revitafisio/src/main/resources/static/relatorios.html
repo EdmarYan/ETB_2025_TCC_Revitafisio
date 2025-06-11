@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Revitafisio</title>
+    <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/dashboard.html">Revitafisio</a>
+        <ul class="navbar-nav ms-auto"><li class="nav-item"><a class="nav-link" href="#" id="logoutButton">Sair</a></li></ul>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2>Relatórios Gerenciais</h2>
+    <p>Selecione os filtros para gerar um relatório de desempenho.</p>
+
+    <div class="card">
+        <div class="card-header">Relatório de Atendimentos Mensais por Fisioterapeuta</div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="mesAnoInput" class="form-label">Selecione o Mês e Ano</label>
+                    <input type="month" id="mesAnoInput" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <button id="gerarRelatorioBtn" class="btn btn-primary w-100">Gerar Relatório</button>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div id="resultado-relatorio">
+                <h5 id="titulo-relatorio" class="d-none">Resultado para: <span></span></h5>
+                <div id="loading" class="text-center d-none">
+                    <div class="spinner-border" role="status"><span class="visually-hidden">Carregando...</span></div>
+                </div>
+                <table class="table table-striped d-none" id="tabela-relatorio">
+                    <thead>
+                    <tr>
+                        <th>Fisioterapeuta</th>
+                        <th class="text-end">Total de Atendimentos Realizados</th>
+                    </tr>
+                    </thead>
+                    <tbody id="corpo-tabela">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Proteção de tela para garantir que apenas Admins acessem
+        const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+        if (!usuarioLogado || usuarioLogado.tipoUsuario !== 'ADMIN') {
+            alert('Acesso negado.');
+            window.location.href = '/dashboard.html';
+        }
+
+        const hoje = new Date();
+        const mes = (hoje.getMonth() + 1).toString().padStart(2, '0');
+        const ano = hoje.getFullYear();
+        document.getElementById('mesAnoInput').value = `${ano}-${mes}`;
+
+        document.getElementById('gerarRelatorioBtn').addEventListener('click', gerarRelatorio);
+    });
+
+    async function gerarRelatorio() {
+        const mesAno = document.getElementById('mesAnoInput').value;
+        const [ano, mes] = mesAno.split('-');
+
+        const loadingEl = document.getElementById('loading');
+        const tabela = document.getElementById('tabela-relatorio');
+        const corpoTabela = document.getElementById('corpo-tabela');
+        const tituloRelatorio = document.getElementById('titulo-relatorio');
+
+        loadingEl.classList.remove('d-none');
+        tabela.classList.add('d-none');
+        corpoTabela.innerHTML = '';
+
+        try {
+            const response = await fetch(`/relatorios/atendimentos-mensal?ano=${ano}&mes=${mes}`);
+            if (!response.ok) throw new Error('Falha ao gerar o relatório.');
+
+            const dados = await response.json();
+
+            tituloRelatorio.classList.remove('d-none');
+            tituloRelatorio.querySelector('span').textContent = `${mes}/${ano}`;
+
+            if (dados.length === 0) {
+                corpoTabela.innerHTML = '<tr><td colspan="2" class="text-center text-muted">Nenhum atendimento realizado neste período.</td></tr>';
+            } else {
+                dados.forEach(item => {
+                    const row = corpoTabela.insertRow();
+                    row.innerHTML = `
+                        <td>${item.nomeFisioterapeuta}</td>
+                        <td class="text-end">${item.totalAtendimentos}</td>
+                    `;
+                });
+            }
+            tabela.classList.remove('d-none');
+
+        } catch (error) {
+            corpoTabela.innerHTML = `<tr><td colspan="2" class="text-center text-danger">${error.message}</td></tr>`;
+            tabela.classList.remove('d-none');
+        } finally {
+            loadingEl.classList.add('d-none');
+        }
+    }
+</script>
+
+</body>
+</html>
