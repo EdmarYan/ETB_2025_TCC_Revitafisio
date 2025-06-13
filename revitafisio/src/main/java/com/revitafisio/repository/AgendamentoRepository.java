@@ -13,11 +13,21 @@ import java.util.List;
 @Repository
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Integer> {
 
-    @Query("SELECT a FROM agendamentos a WHERE a.fisioterapeuta.idUsuario = :idFisioterapeuta AND a.dataHoraInicio >= :inicio AND a.dataHoraFim <= :fim")
-    List<Agendamento> findByFisioterapeutaAndPeriodo(Integer idFisioterapeuta, LocalDateTime inicio, LocalDateTime fim);
+    /**
+     *  metodo de consulta derivado pelo Spring Data JPA.
+     * Este metodo faz a mesma busca que a @Query anterior, mas de forma segura e automática.
+     * Ele busca agendamentos onde:
+     * - O ID do usuário do fisioterapeuta associado é igual ao id passado
+     * - A data de início é maior ou igual ao início do período
+     * - A data de fim é menor ou igual ao fim do período
+     */
+    List<Agendamento> findByFisioterapeuta_IdUsuarioAndDataHoraInicioGreaterThanEqualAndDataHoraFimLessThanEqual(
+            Integer idFisioterapeuta, LocalDateTime inicio, LocalDateTime fim
+    );
 
+    // Esta consulta foi ajustada para usar "Agendamento a" em vez de "agendamentos a"
     @Query("SELECT new com.revitafisio.records.RelatorioAtendimentoResponse(u.nome, COUNT(a)) " +
-            "FROM agendamentos a JOIN a.fisioterapeuta u " +
+            "FROM Agendamento a JOIN a.fisioterapeuta u " +
             "WHERE a.status = 'REALIZADO' AND a.dataHoraInicio BETWEEN :inicio AND :fim " +
             "GROUP BY u.nome")
     List<RelatorioAtendimentoResponse> getRelatorioAtendimentosPorPeriodo(LocalDateTime inicio, LocalDateTime fim);

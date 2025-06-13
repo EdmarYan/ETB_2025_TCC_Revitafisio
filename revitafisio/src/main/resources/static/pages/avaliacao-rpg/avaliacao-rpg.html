@@ -8,7 +8,6 @@
     <link href="../../vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
     <link href="../../css/sb-admin-2.min.css" rel="stylesheet">
-    <link href="avaliacao-rpg.css" rel="stylesheet">
 </head>
 
 <body id="page-top">
@@ -51,31 +50,87 @@
                     <div class="card-body">
                         <form id="formAvaliacaoRpg">
                             <fieldset class="mb-4 p-3 border rounded">
-                                <legend class="h6">Anamnese</legend>
+                                <legend class="h6 font-weight-bold text-primary">Anamnese</legend>
                                 <div class="row">
-                                    <div class="col-md-12 mb-3"><label for="diagnostico_clinico" class="form-label">Diagnóstico Clínico</label><input type="text" id="diagnostico_clinico" name="diagnostico_clinico" class="form-control"></div>
-                                    <div class="col-md-12 mb-3"><label for="hma" class="form-label">HMA</label><textarea id="hma" name="hma" rows="3" class="form-control"></textarea></div>
-                                    <div class="col-md-6 mb-3"><label for="posicao_dor" class="form-label">Posição da Dor</label><input type="text" id="posicao_dor" name="posicao_dor" class="form-control"></div>
-                                    <div class="col-md-6 mb-3"><label for="grau_dor" class="form-label">Grau da Dor</label>
-                                        <select id="grau_dor" name="grau_dor" class="form-select"><option value="">Selecione...</option><option value="LEVE">Leve</option><option value="MODERADA">Moderada</option><option value="INTENSA">Intensa</option></select>
+                                    <div class="col-md-12 mb-3"><label for="diagnostico_clinico" class="form-label">Diagnóstico Clínico</label><input type="text" id="diagnostico_clinico" name="diagnostico_clinico" class="form-control" required></div>
+                                    <div class="col-md-12 mb-3"><label for="hma" class="form-label">História da Moléstia Atual (HMA)</label><textarea id="hma" name="hma" rows="3" class="form-control" required></textarea></div>
+                                    <div class="col-md-6 mb-3"><label for="posicao_dor" class="form-label">Posição da Dor</label><input type="text" id="posicao_dor" name="posicao_dor" class="form-control" required></div>
+                                    <div class="col-md-6 mb-3"><label for="grau_dor" class="form-label">Grau da Dor (EVA)</label>
+                                        <select id="grau_dor" name="grau_dor" class="form-control"><option value="">Selecione...</option><option value="LEVE">Leve</option><option value="MODERADA">Moderada</option><option value="INTENSA">Intensa</option></select>
                                     </div>
+                                    <div class="col-md-12 mb-3"><label for="outras_patologias" class="form-label">Outras Patologias</label><textarea id="outras_patologias" name="outras_patologias" rows="2" class="form-control"></textarea></div>
                                 </div>
                             </fieldset>
 
                             <fieldset class="mb-4 p-3 border rounded">
-                                <legend class="h6">Avaliação Postural</legend>
+                                <legend class="h6 font-weight-bold text-primary">Exames e Medicações</legend>
                                 <div class="row">
-                                    <div class="col-md-4 mb-3"><label for="cabeca" class="form-label">Cabeça</label>
-                                        <select id="cabeca" name="cabeca" class="form-select"><option value="">Selecione...</option><option value="ALINHADA">Alinhada</option><option value="RODADA_DIREITA">Rodada à Direita</option><option value="RODADA_ESQUERDA">Rodada à Esquerda</option><option value="INCLINADA_DIREITA">Inclinada à Direita</option><option value="INCLINADA_ESQUERDA">Inclinada à Esquerda</option></select>
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label d-block">Exames de Imagem Realizados</label>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="ressonancia_magnetica" name="ressonancia_magnetica">
+                                            <label class="form-check-label" for="ressonancia_magnetica">Ressonância Magnética</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="raio_x" name="raio_x">
+                                            <label class="form-check-label" for="raio_x">Raio-X</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="tomografia" name="tomografia">
+                                            <label class="form-check-label" for="tomografia">Tomografia</label>
+                                        </div>
                                     </div>
-                                    <div class="col-md-4 mb-3"><label for="ombros" class="form-label">Ombros</label>
-                                        <select id="ombros" name="ombros" class="form-select"><option value="">Selecione...</option><option value="NIVELADOS">Nivelados</option><option value="ESQUERDO_ELEVADO">Esquerdo Elevado</option><option value="DIREITO_ELEVADO">Direito Elevado</option></select>
+                                    <div class="col-md-12 mb-3"><label for="outros_exames" class="form-label">Outros Exames</label><input type="text" id="outros_exames" name="outros_exames" class="form-control"></div>
+                                </div>
+                                <div class="row align-items-center">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label d-block">Uso de Medicamentos?</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="uso_medicamentos" name="uso_medicamentos">
+                                            <label class="form-check-label" for="uso_medicamentos">Sim</label>
+                                        </div>
                                     </div>
-                                    <div class="col-md-4 mb-3"><label for="escapulas" class="form-label">Escápulas</label>
-                                        <select id="escapulas" name="escapulas" class="form-select"><option value="">Selecione...</option><option value="DIREITA_ALTA">Direita Alta</option><option value="ESQUERDA_ALTA">Esquerda Alta</option></select>
-                                    </div>
+                                    <div class="col-md-8 mb-3"><label for="medicamentos_descricao" class="form-label">Quais?</label><input type="text" id="medicamentos_descricao" name="medicamentos_descricao" class="form-control"></div>
                                 </div>
                             </fieldset>
+
+                            <fieldset class="mb-4 p-3 border rounded">
+                                <legend class="h6 font-weight-bold text-primary">Avaliação Postural</legend>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3"><label for="cabeca" class="form-label">Cabeça</label>
+                                        <select id="cabeca" name="cabeca" class="form-control"><option value="">Selecione...</option><option value="ALINHADA">Alinhada</option><option value="RODADA_DIREITA">Rodada à Direita</option><option value="RODADA_ESQUERDA">Rodada à Esquerda</option><option value="INCLINADA_DIREITA">Inclinada à Direita</option><option value="INCLINADA_ESQUERDA">Inclinada à Esquerda</option></select>
+                                    </div>
+                                    <div class="col-md-4 mb-3"><label for="ombros" class="form-label">Ombros</label>
+                                        <select id="ombros" name="ombros" class="form-control"><option value="">Selecione...</option><option value="NIVELADOS">Nivelados</option><option value="ESQUERDO_ELEVADO">Esquerdo Elevado</option><option value="DIREITO_ELEVADO">Direito Elevado</option></select>
+                                    </div>
+                                    <div class="col-md-4 mb-3"><label for="escapulas" class="form-label">Escápulas</label>
+                                        <select id="escapulas" name="escapulas" class="form-control"><option value="">Selecione...</option><option value="DIREITA_ALTA">Direita Alta</option><option value="ESQUERDA_ALTA">Esquerda Alta</option></select>
+                                    </div>
+                                    <div class="col-md-4 mb-3"><label for="pelve" class="form-label">Pelve</label>
+                                        <select id="pelve" name="pelve" class="form-control"><option value="">Selecione...</option><option value="ANTEVERSÃO">Anteversão</option><option value="RETROVERSÃO">Retroversão</option><option value="NORMAL">Normal</option></select>
+                                    </div>
+                                    <div class="col-md-4 mb-3"><label for="eias" class="form-label">EIAS</label>
+                                        <select id="eias" name="eias" class="form-control"><option value="">Selecione...</option><option value="SIMETRICAS">Simétricas</option><option value="DIREITA_ALTA">Direita Alta</option><option value="ESQUERDA_ALTA">Esquerda Alta</option></select>
+                                    </div>
+                                    <div class="col-md-4 mb-3"><label for="joelhos" class="form-label">Joelhos</label>
+                                        <select id="joelhos" name="joelhos" class="form-control"><option value="">Selecione...</option><option value="VALGO">Valgo</option><option value="VARO">Varo</option><option value="NORMAL">Normal</option></select>
+                                    </div>
+                                    <div class="col-md-4 mb-3"><label for="lombar" class="form-label">Curvatura Lombar</label>
+                                        <select id="lombar" name="lombar" class="form-control"><option value="">Selecione...</option><option value="HIPERLORDOSE">Hiperlordose</option><option value="RETIFICADA">Retificada</option><option value="NORMAL">Normal</option></select>
+                                    </div>
+                                    <div class="col-md-4 mb-3"><label for="maos" class="form-label">Mãos</label>
+                                        <select id="maos" name="maos" class="form-control"><option value="">Selecione...</option><option value="SIMETRICOS">Simétricos</option><option value="DIREITA_ALTA">Direita Alta</option><option value="ESQUERDA_ALTA">Esquerda Alta</option></select>
+                                    </div>
+                                </div>
+                                <div class="mb-3"><label for="outros_desequilibrios" class="form-label">Outros Desequilíbrios</label><textarea id="outros_desequilibrios" name="outros_desequilibrios" rows="3" class="form-control"></textarea></div>
+                            </fieldset>
+
+                            <fieldset class="mb-4 p-3 border rounded">
+                                <legend class="h6 font-weight-bold text-primary">Plano de Tratamento</legend>
+                                <div class="mb-3"><label for="tratamento_proposto" class="form-label">Tratamento Proposto</label><textarea id="tratamento_proposto" name="tratamento_proposto" rows="3" class="form-control"></textarea></div>
+                                <div class="mb-3"><label for="observacoes" class="form-label">Observações</label><textarea id="observacoes" name="observacoes" rows="3" class="form-control"></textarea></div>
+                            </fieldset>
+
 
                             <div id="resultado" class="my-3"></div>
                             <button type="submit" class="btn btn-primary btn-lg">Salvar Avaliação de RPG</button>
@@ -92,7 +147,6 @@
 
 <script src="../../vendor/jquery/jquery.min.js"></script>
 <script src="../../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="../../vendor/jquery-easing/jquery.easing.min.js"></script>
 <script src="../../js/sb-admin-2.min.js"></script>
 <script src="avaliacao-rpg.js"></script>
 </body>

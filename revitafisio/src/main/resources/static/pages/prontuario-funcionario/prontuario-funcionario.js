@@ -31,6 +31,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
+    document.getElementById('editMode').addEventListener('submit', (event) => {
+        event.preventDefault(); // Impede a submissão padrão do formulário
+        salvarAlteracoes();     // Chama sua função de salvamento existente
+    });
+
     // Preenche informações do template (nome do usuário e menu lateral)
     document.getElementById('userName').textContent = usuarioLogado.nome;
     renderizarSidebar(usuarioLogado.tipoUsuario);
@@ -269,9 +274,7 @@ async function salvarEspecialidades() {
         funcionarioAtual.especialidades = fisioAtualizado.especialidades;
         renderizarBadgesEspecialidades(fisioAtualizado.especialidades);
 
-        const modalEl = document.getElementById('especialidadesModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        modal.hide();
+        $('#especialidadesModal').modal('hide');
     } catch(error) {
         resultadoDiv.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
     }

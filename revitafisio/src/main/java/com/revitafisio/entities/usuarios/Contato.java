@@ -1,11 +1,9 @@
 package com.revitafisio.entities.usuarios;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.revitafisio.entities.usuarios.Usuario;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @Builder
@@ -20,7 +18,9 @@ public class Contato {
     @Column(name = "id_contato")
     private Integer idContato;
 
-    @ManyToOne
+    @JsonBackReference
+    @EqualsAndHashCode.Exclude
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 

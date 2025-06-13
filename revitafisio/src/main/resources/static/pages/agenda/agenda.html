@@ -5,11 +5,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Agenda - Revitafisio</title>
-
     <link href="../../vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
     <link href="../../css/sb-admin-2.min.css" rel="stylesheet">
-
     <link href="agenda.css" rel="stylesheet">
 </head>
 
@@ -25,8 +23,6 @@
         <hr class="sidebar-divider">
         <div class="sidebar-heading">Gestão</div>
         <div id="sidebar-links"></div>
-        <hr class="sidebar-divider d-none d-md-block">
-        <div class="text-center d-none d-md-inline"><button class="rounded-circle border-0" id="sidebarToggle"></button></div>
     </ul>
 
     <div id="content-wrapper" class="d-flex flex-column">
@@ -34,15 +30,7 @@
             <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
                 <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars"></i></button>
                 <ul class="navbar-nav ml-auto">
-                    <li class="nav-item dropdown no-arrow">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                            <span class="mr-2 d-none d-lg-inline text-gray-600 small" id="userName"></span>
-                            <img class="img-profile rounded-circle" src="../../img/undraw_profile.svg">
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                            <a class="dropdown-item" href="#" id="logoutButton"><i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>Sair</a>
-                        </div>
-                    </li>
+                    <li class="nav-item dropdown no-arrow"><a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"><span class="mr-2 d-none d-lg-inline text-gray-600 small" id="userName"></span><img class="img-profile rounded-circle" src="../../img/undraw_profile.svg"></a><div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"><a class="dropdown-item" href="#" id="logoutButton"><i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>Sair</a></div></li>
                 </ul>
             </nav>
 
@@ -53,40 +41,25 @@
                     <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Filtros da Agenda</h6></div>
                     <div class="card-body">
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-5"><label for="fisioterapeutaSelect" class="form-label">Fisioterapeuta</label><select id="fisioterapeutaSelect" class="form-select"></select></div>
+                            <div class="col-md-5"><label for="fisioterapeutaSelect" class="form-label">Fisioterapeuta</label><select id="fisioterapeutaSelect" class="form-control"></select></div>
                             <div class="col-md-4"><label for="dataSelect" class="form-label">Data</label><input type="date" id="dataSelect" class="form-control"></div>
                             <div class="col-md-3"><button id="buscarAgendaBtn" class="btn btn-primary w-100">Visualizar Agenda</button></div>
                         </div>
                     </div>
                 </div>
+
                 <div id="loading" class="text-center d-none"><div class="spinner-border text-primary" role="status"></div></div>
-                <div id="agenda-container" class="row"></div>
+                <div id="agenda-container" class="row">
+                </div>
             </div>
         </div>
-        <footer class="sticky-footer bg-white">
-            <div class="container my-auto"><div class="copyright text-center my-auto"><span>Copyright &copy; Revitafisio 2025</span></div></div>
-        </footer>
+        <footer class="sticky-footer bg-white"><div class="container my-auto"><div class="copyright text-center my-auto"><span>Copyright &copy; Revitafisio 2025</span></div></div></footer>
     </div>
 </div>
 
-<div class="modal fade" id="agendamentoModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Novo Agendamento</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <form id="formAgendamento">
-                    <div class="mb-3"><strong>Profissional:</strong> <span id="modalFisioNome"></span><br><strong>Horário:</strong> <span id="modalHorario"></span></div>
-                    <div class="mb-3"><label for="pacienteSelect" class="form-label">Paciente</label><select id="pacienteSelect" class="form-select" required></select></div>
-                    <div class="mb-3"><label for="especialidadeSelect" class="form-label">Especialidade</label><select id="especialidadeSelect" class="form-select" required disabled><option value="">Selecione um fisioterapeuta...</option></select></div>
-                </form>
-                <div id="resultadoModal" class="mt-3"></div>
-            </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" id="confirmarAgendamentoBtn">Confirmar</button></div>
-        </div>
-    </div>
-</div>
+<div class="modal fade" id="agendamentoModal" tabindex="-1" role="dialog"><div class="modal-dialog" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Novo Agendamento</h5><button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><div class="mb-3"><strong>Profissional:</strong> <span id="modalFisioNome"></span><br><strong>Horário:</strong> <span id="modalHorario"></span></div><div class="mb-3"><label for="pacienteSelect">Paciente</label><select id="pacienteSelect" class="form-control" required></select></div><div class="mb-3"><label for="especialidadeSelect">Especialidade</label><select id="especialidadeSelect" class="form-control" required></select></div><div id="resultadoModal" class="mt-3"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" id="confirmarAgendamentoBtn">Confirmar</button></div></div></div></div>
 
-<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+<div class="modal fade" id="detalhesConsultaModal" tabindex="-1" role="dialog"><div class="modal-dialog" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Detalhes da Consulta</h5><button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><p><strong>Paciente:</strong> <span id="detalhe-paciente"></span></p><p><strong>Status:</strong> <span id="detalhe-status" class="font-weight-bold"></span></p></div><div class="modal-footer"><button type="button" class="btn btn-primary" data-dismiss="modal">Fechar</button></div></div></div></div>
 
 <script src="../../vendor/jquery/jquery.min.js"></script>
 <script src="../../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>

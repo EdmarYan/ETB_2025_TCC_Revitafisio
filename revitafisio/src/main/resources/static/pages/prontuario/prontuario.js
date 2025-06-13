@@ -1,5 +1,7 @@
 /**
  * @file Lógica completa para a página de prontuário do paciente.
+ * @description Carrega dados do paciente (incluindo contatos), evoluções, avaliações
+ * e gerencia a edição dos dados cadastrais.
  */
 
 // Variáveis globais para armazenar dados da página
@@ -59,20 +61,45 @@ function configurarVisibilidadePorPerfil() {
     document.getElementById('botoes-edicao-paciente').style.display = isAdmin ? 'block' : 'none';
 }
 
+/**
+ * (FUNÇÃO ATUALIZADA) Preenche a tela com todos os dados do paciente, incluindo os contatos.
+ * @param {object} paciente - O objeto completo do paciente vindo da API.
+ */
 function preencherDadosNaTela(paciente) {
+    const pacienteId = new URLSearchParams(window.location.search).get('pacienteId');
     document.getElementById('nomePacienteView').textContent = `Prontuário de: ${paciente.nome}`;
 
+    // --- BLOCO ADICIONADO: Lógica para criar o HTML dos contatos ---
+    let contatosHTML = '<hr><h6 class="font-weight-bold text-primary mt-3">Contatos</h6>';
+    if (paciente.contatos && paciente.contatos.length > 0) {
+        paciente.contatos.forEach(contato => {
+            // Formata o tipo de contato para ter apenas a primeira letra maiúscula (ex: "Whatsapp")
+            const tipoFormatado = contato.tipo.charAt(0).toUpperCase() + contato.tipo.slice(1).toLowerCase();
+            contatosHTML += `<p class="mb-1"><strong>${tipoFormatado}:</strong> ${contato.valor}</p>`;
+        });
+    } else {
+        contatosHTML += '<p class="mb-1 text-muted">Nenhum contato cadastrado.</p>';
+    }
+    // --- FIM DO BLOCO ADICIONADO ---
+
+
+    // Preenche a área de visualização com os dados do paciente e a nova seção de contatos
     document.getElementById('viewMode').innerHTML = `
         <p class="mb-1"><strong>CPF:</strong> ${paciente.cpf}</p>
         <p class="mb-1"><strong>Data de Nascimento:</strong> ${new Date(paciente.dataNascimento).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</p>
         <p class="mb-0"><strong>Status:</strong> <span class="badge ${paciente.ativo ? 'bg-success' : 'bg-danger'}">${paciente.ativo ? 'Ativo' : 'Inativo'}</span></p>
+        ${contatosHTML}
     `;
+
+    // Preenche o formulário de edição (sem os contatos por enquanto, para manter simples)
     document.getElementById('editMode').innerHTML = `
         <div class="row">
             <div class="col-md-6 mb-3"><label for="nomeInput" class="form-label">Nome</label><input type="text" class="form-control" id="nomeInput" value="${paciente.nome}"></div>
             <div class="col-md-6 mb-3"><label for="nascimentoInput" class="form-label">Data de Nascimento</label><input type="date" class="form-control" id="nascimentoInput" value="${paciente.dataNascimento}"></div>
         </div>
     `;
+
+    // Recria os botões de ação para garantir que os listeners sejam adicionados corretamente
     document.getElementById('botoes-edicao-paciente').innerHTML = `
         <button class="btn btn-sm btn-secondary" id="editButton"><i class="fas fa-edit"></i> Editar</button>
         <button class="btn btn-sm btn-success d-none" id="saveButton"><i class="fas fa-save"></i> Salvar</button>
@@ -81,12 +108,12 @@ function preencherDadosNaTela(paciente) {
         <button class="btn btn-sm btn-success ${paciente.ativo ? 'd-none' : ''}" id="ativarBtn">Reativar</button>
     `;
 
-    // Adiciona os listeners aos botões que foram recriados
+    // Re-adiciona os listeners aos botões recriados
     document.getElementById('editButton').addEventListener('click', () => toggleEditMode(true));
-    document.getElementById('saveButton').addEventListener('click', salvarAlteracoes);
+    document.getElementById('saveButton').addEventListener('click', () => salvarAlteracoes(pacienteId));
     document.getElementById('cancelButton').addEventListener('click', () => toggleEditMode(false));
-    document.getElementById('inativarBtn').addEventListener('click', () => inativarPaciente(paciente.id));
-    document.getElementById('ativarBtn').addEventListener('click', () => ativarPaciente(paciente.id));
+    document.getElementById('inativarBtn').addEventListener('click', () => inativarPaciente(pacienteId));
+    document.getElementById('ativarBtn').addEventListener('click', () => ativarPaciente(pacienteId));
 }
 
 function toggleEditMode(isEditing) {
@@ -106,9 +133,7 @@ async function carregarDadosPaciente(id) {
         const response = await fetch(`/pacientes/${id}`);
         if (!response.ok) throw new Error('Paciente não encontrado.');
         pacienteAtual = await response.json();
-
         preencherDadosNaTela(pacienteAtual);
-
         document.getElementById('loading').classList.add('d-none');
         document.getElementById('patient-details').classList.remove('d-none');
     } catch (error) {
@@ -117,10 +142,13 @@ async function carregarDadosPaciente(id) {
     }
 }
 
-async function salvarAlteracoes() {
+async function salvarAlteracoes(pacienteId) {
     const dadosParaAtualizar = {
         nome: document.getElementById('nomeInput').value,
-        dataNascimento: document.getElementById('nascimentoInput').value
+        dataNascimento: document.getElementById('nascimentoInput').value,
+        // OBS: A edição de contatos não foi implementada aqui para manter a simplicidade.
+        // Seria necessário um formulário mais complexo para editar a lista de contatos.
+        contatos: pacienteAtual.contatos
     };
     try {
         const response = await fetch(`/pacientes/${pacienteId}`, {
@@ -138,7 +166,7 @@ async function salvarAlteracoes() {
 }
 
 async function inativarPaciente(id) {
-    if (!confirm('Tem certeza?')) return;
+    if (!confirm('Tem certeza que deseja inativar este paciente?')) return;
     try {
         await fetch(`/pacientes/${id}`, { method: 'DELETE' });
         pacienteAtual.ativo = false;
@@ -147,7 +175,7 @@ async function inativarPaciente(id) {
 }
 
 async function ativarPaciente(id) {
-    if (!confirm('Tem certeza?')) return;
+    if (!confirm('Tem certeza que deseja reativar este paciente?')) return;
     try {
         await fetch(`/pacientes/${id}/ativar`, { method: 'PATCH' });
         pacienteAtual.ativo = true;
@@ -161,13 +189,11 @@ async function carregarStatusAvaliacoes(idPaciente) {
     const containerOrto = document.getElementById('container-avaliacao-ortopedia');
     const containerRpg = document.getElementById('container-avaliacao-rpg');
 
-    // Ortopedia
     try {
         const resOrto = await fetch(`/avaliacoes/ortopedia/paciente/${idPaciente}`);
         containerOrto.innerHTML = resOrto.ok ? `<span>Avaliação de Ortopedia</span><a href="${linkOrto}" class="btn btn-secondary btn-sm">Ver / Editar</a>` : `<span>Avaliação de Ortopedia</span><a href="${linkOrto}" class="btn btn-outline-primary btn-sm">Realizar Avaliação</a>`;
     } catch (e) { containerOrto.innerHTML = '<span>Avaliação de Ortopedia</span> <span class="text-danger small">Erro ao carregar</span>'; }
 
-    // RPG
     try {
         const resRpg = await fetch(`/avaliacoes/rpg/paciente/${idPaciente}`);
         containerRpg.innerHTML = resRpg.ok ? `<span>Avaliação de RPG</span><a href="${linkRpg}" class="btn btn-secondary btn-sm">Ver / Editar</a>` : `<span>Avaliação de RPG</span><a href="${linkRpg}" class="btn btn-outline-success btn-sm">Realizar Avaliação</a>`;
@@ -201,9 +227,7 @@ async function salvarEvolucao(event, idPaciente) {
     const resultadoDiv = document.getElementById('resultadoEvolucao');
     const descricao = document.getElementById('descricaoEvolucao').value;
     resultadoDiv.innerHTML = '';
-
     if (!usuarioLogado || !usuarioLogado.tipoUsuario.includes('FISIOTERAPEUTA')) return;
-
     const requestBody = { idPaciente, idFisioterapeuta: usuarioLogado.usuarioId, descricao };
     try {
         const response = await fetch('/evolucoes', {
@@ -212,7 +236,6 @@ async function salvarEvolucao(event, idPaciente) {
             body: JSON.stringify(requestBody)
         });
         if (!response.ok) throw new Error('Falha ao salvar.');
-
         document.getElementById('descricaoEvolucao').value = '';
         resultadoDiv.innerHTML = '<div class="alert alert-success">Evolução salva!</div>';
         setTimeout(() => resultadoDiv.innerHTML = '', 3000);

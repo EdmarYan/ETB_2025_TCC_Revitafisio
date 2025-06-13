@@ -18,9 +18,10 @@ public class HorarioDisponivelService {
         this.horarioDisponivelRepository = horarioDisponivelRepository;
     }
 
+
     @Transactional(readOnly = true)
-    public List<HorarioDisponivelResponse> buscarPorFisioEData(Integer idFisioterapeuta, LocalDate data) {
-        return horarioDisponivelRepository.findByFisioterapeutaIdUsuarioAndData(idFisioterapeuta, data)
+    public List<HorarioDisponivelResponse> buscarPorFisioEPeriodo(Integer idFisioterapeuta, LocalDate inicio, LocalDate fim) {
+        return horarioDisponivelRepository.findByFisioterapeutaIdUsuarioAndDataBetween(idFisioterapeuta, inicio, fim)
                 .stream()
                 .map(HorarioDisponivelResponse::new)
                 .collect(Collectors.toList());

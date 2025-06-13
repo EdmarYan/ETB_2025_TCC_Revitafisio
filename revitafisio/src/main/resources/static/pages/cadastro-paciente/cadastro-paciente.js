@@ -1,32 +1,25 @@
 /**
  * @file Lógica da página de cadastro de pacientes.
  * @description Garante que usuários autorizados acessem, aplica máscara de CPF
- * e envia os dados do novo paciente para a API.
+ * e envia os dados do novo paciente (incluindo contatos) para a API.
  */
 document.addEventListener('DOMContentLoaded', function() {
     const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
 
-    // Proteção de Rota: Apenas Admins e Recepcionistas podem cadastrar pacientes.
     if (!usuarioLogado || !(usuarioLogado.tipoUsuario.includes('ADMIN') || usuarioLogado.tipoUsuario.includes('RECEPCIONISTA'))) {
         alert('Acesso negado.');
         window.location.href = '../../pages/dashboard/dashboard.html';
         return;
     }
 
-    // Preenche informações do template
     document.getElementById('userName').textContent = usuarioLogado.nome;
     renderizarSidebar(usuarioLogado.tipoUsuario);
-
-    // Adiciona listener ao formulário de cadastro
     document.getElementById('formCadastroPaciente').addEventListener('submit', cadastrarPaciente);
-
-    // Adiciona listener ao botão de sair
     document.getElementById('logoutButton').addEventListener('click', () => {
         localStorage.clear();
         window.location.href = '../../login.html';
     });
 
-    // Aplica a máscara de formatação no campo de CPF
     const cpfInput = document.getElementById('cpf');
     if (cpfInput) {
         cpfInput.setAttribute('maxlength', '14');
@@ -34,14 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-/**
- * Renderiza os links do menu lateral de acordo com o perfil do usuário.
- * @param {string} tipoUsuario - Os cargos do usuário logado.
- */
 function renderizarSidebar(tipoUsuario) {
     const sidebarContainer = document.getElementById('sidebar-links');
     sidebarContainer.innerHTML = '';
-
     if (tipoUsuario.includes('ADMIN')) {
         sidebarContainer.innerHTML += `<li class="nav-item"><a class="nav-link" href="../funcionarios/funcionarios.html"><i class="fas fa-fw fa-users-cog"></i><span>Gerenciar Equipe</span></a></li>`;
         sidebarContainer.innerHTML += `<li class="nav-item"><a class="nav-link" href="../relatorios/relatorios.html"><i class="fas fa-fw fa-chart-bar"></i><span>Relatórios</span></a></li>`;
@@ -53,16 +41,33 @@ function renderizarSidebar(tipoUsuario) {
 }
 
 /**
- * Pega os dados do formulário e os envia para a API criar um novo paciente.
- * @param {Event} event - O evento de submissão do formulário.
+ * (FUNÇÃO ATUALIZADA) Pega os dados do formulário, incluindo os contatos, e os envia para a API.
  */
 async function cadastrarPaciente(event) {
-    event.preventDefault(); // Previne o recarregamento da página
+    event.preventDefault();
     const resultadoDiv = document.getElementById('resultado');
+
+    // BLOCO ADICIONADO: Monta a lista de contatos para enviar.
+    const contatos = [];
+    const celular = document.getElementById('celular').value;
+    const email = document.getElementById('email').value;
+
+    // Se o campo de celular foi preenchido, adiciona à lista como WHATSAPP principal.
+    if (celular) {
+        contatos.push({ tipo: 'WHATSAPP', valor: celular, principal: true });
+    }
+    // Se o campo de email foi preenchido, adiciona à lista.
+    if (email) {
+        // Define email como principal apenas se o celular não for fornecido.
+        contatos.push({ tipo: 'EMAIL', valor: email, principal: !celular });
+    }
+
+    // Corpo da requisição agora inclui a lista de contatos.
     const dadosParaEnviar = {
         nome: document.getElementById('nome').value,
-        cpf: document.getElementById('cpf').value.replace(/\D/g, ''), // Envia só os números
-        dataNascimento: document.getElementById('dataNascimento').value
+        cpf: document.getElementById('cpf').value.replace(/\D/g, ''),
+        dataNascimento: document.getElementById('dataNascimento').value,
+        contatos: contatos
     };
 
     try {
@@ -71,9 +76,8 @@ async function cadastrarPaciente(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dadosParaEnviar)
         });
-
         resultadoDiv.className = 'alert';
-        if (response.status === 201) { // 201 Created é o status de sucesso para POST
+        if (response.status === 201) {
             resultadoDiv.textContent = 'Paciente cadastrado com sucesso!';
             resultadoDiv.classList.add('alert-success');
             document.getElementById('formCadastroPaciente').reset();
@@ -88,10 +92,6 @@ async function cadastrarPaciente(event) {
     }
 }
 
-/**
- * Aplica a máscara de formatação (xxx.xxx.xxx-xx) em um campo de input de CPF.
- * @param {Event} event - O evento de input.
- */
 function aplicarMascaraCpf(event) {
     const input = event.target;
     let value = input.value.replace(/\D/g, '');

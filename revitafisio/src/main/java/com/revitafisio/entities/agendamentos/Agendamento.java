@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "agendamentos")
+@Entity // <-- MUDANÇA AQUI: Removido (name = "agendamentos")
 @Table(name = "agendamentos")
 public class Agendamento {
 
@@ -22,15 +22,15 @@ public class Agendamento {
     @Column(name = "id_agendamento")
     private Integer idAgendamento;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_paciente", nullable = false)
     private Usuario paciente;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_fisioterapeuta", nullable = false)
     private Usuario fisioterapeuta;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_especialidade", nullable = false)
     private Especialidade especialidade;
 
@@ -43,13 +43,7 @@ public class Agendamento {
     @Enumerated(EnumType.STRING)
     private StatusAgendamento status;
 
-    @Column(name = "confirmacao_whatsapp")
-    private boolean confirmacaoWhatsapp;
-
-    @Column(name = "prazo_confirmacao")
-    private LocalDateTime prazoConfirmacao;
-
     public enum StatusAgendamento {
-        CONFIRMADO, CANCELADO, PENDENTE, REALIZADO,NAO_COMPARECEU
+        CONFIRMADO, CANCELADO, PENDENTE, REALIZADO, NAO_COMPARECEU
     }
 }

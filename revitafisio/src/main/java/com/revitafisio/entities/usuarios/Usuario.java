@@ -1,7 +1,10 @@
 package com.revitafisio.entities.usuarios;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -33,6 +36,8 @@ public abstract class Usuario {
     @Column(name = "data_cadastro", insertable = false, updatable = false)
     private LocalDateTime dataCadastro;
 
+    @JsonManagedReference
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Contato> contatos;
 

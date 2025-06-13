@@ -58,7 +58,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-lg-5">
                         <div class="card shadow mb-4">
                             <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Adicionar Novo Horário</h6></div>
@@ -81,12 +80,19 @@
                                         <div class="col-6 mb-3"><label for="horaInicio" class="form-label">Início</label><input type="time" id="horaInicio" class="form-control" step="1800" required></div>
                                         <div class="col-6 mb-3"><label for="horaFim" class="form-label">Fim</label><input type="time" id="horaFim" class="form-control" step="1800" required></div>
                                     </div>
+                                    <div class="mb-3 text-center">
+                                        <small class="text-muted d-block mb-2">Ou use um turno pré-definido:</small>
+                                        <div class="btn-group w-100" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" id="turnoManhaBtn">Manhã (08-12h)</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" id="turnoTardeBtn">Tarde (13-18h)</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" id="turnoIntegralBtn">Integral (08-18h)</button>
+                                        </div>
+                                    </div>
                                     <button type="submit" class="btn btn-primary w-100">Adicionar à Grade</button>
                                 </form>
                                 <div id="resultadoAdicao" class="mt-3"></div>
                             </div>
                         </div>
-
                         <div class="card shadow mb-4">
                             <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Gerar Agenda Mensal</h6></div>
                             <div class="card-body">

@@ -25,9 +25,10 @@ public class HorarioDisponivelController {
     @GetMapping
     public ResponseEntity<List<HorarioDisponivelResponse>> buscarDisponibilidade(
             @RequestParam Integer idFisioterapeuta,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end
     ) {
-        var horarios = horarioDisponivelService.buscarPorFisioEData(idFisioterapeuta, data);
+        var horarios = horarioDisponivelService.buscarPorFisioEPeriodo(idFisioterapeuta, start, end);
         return ResponseEntity.ok(horarios);
     }
 }

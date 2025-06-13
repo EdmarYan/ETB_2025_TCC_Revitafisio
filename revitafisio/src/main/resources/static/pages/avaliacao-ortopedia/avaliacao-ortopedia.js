@@ -1,9 +1,8 @@
 /**
  * @file Lógica para a Ficha de Avaliação de Ortopedia.
- * @description Carrega dados do paciente e da avaliação, preenche o formulário e gerencia o salvamento.
+ * @description Carrega dados do paciente, da avaliação e gerencia o salvamento com redirecionamento.
  */
 
-// Pega IDs da URL e dados do usuário do localStorage
 const urlParams = new URLSearchParams(window.location.search);
 const pacienteId = urlParams.get('pacienteId');
 const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
@@ -12,28 +11,21 @@ const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
  * Ponto de entrada: Roda quando a página carrega.
  */
 document.addEventListener('DOMContentLoaded', function() {
-    // Validação de segurança
     if (!pacienteId || !usuarioLogado || !usuarioLogado.tipoUsuario.includes('FISIOTERAPEUTA')) {
         alert('Acesso inválido ou não autorizado.');
         window.location.href = '../../dashboard.html';
         return;
     }
 
-    // Configura elementos do template
     document.getElementById('userName').textContent = usuarioLogado.nome;
     document.getElementById('voltarProntuario').href = `../prontuario/prontuario.html?pacienteId=${pacienteId}`;
     renderizarSidebar(usuarioLogado.tipoUsuario);
 
-    // Adiciona o listener para o formulário
     document.getElementById('formAvaliacaoOrtopedia').addEventListener('submit', salvar);
-
-    // Listener do botão de logout
     document.getElementById('logoutButton').addEventListener('click', () => {
         localStorage.clear();
         window.location.href = '../../login.html';
     });
-
-    // Inicia o carregamento dos dados
     carregarDados();
 });
 
@@ -43,16 +35,13 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function renderizarSidebar(tipoUsuario) {
     const sidebarContainer = document.getElementById('sidebar-links');
-    sidebarContainer.innerHTML = '';
-    // Adicione os links conforme a necessidade
-    sidebarContainer.innerHTML += `<li class="nav-item"><a class="nav-link" href="../agenda/agenda.html"><i class="fas fa-fw fa-calendar-alt"></i><span>Agenda</span></a></li>`;
+    sidebarContainer.innerHTML = `<li class="nav-item"><a class="nav-link" href="../agenda/agenda.html"><i class="fas fa-fw fa-calendar-alt"></i><span>Agenda</span></a></li>`;
 }
 
 /**
  * Carrega o nome do paciente e os dados da avaliação existente, se houver.
  */
 async function carregarDados() {
-    // Busca o nome do paciente
     try {
         const pacienteResponse = await fetch(`/pacientes/${pacienteId}`);
         const paciente = await pacienteResponse.json();
@@ -61,12 +50,10 @@ async function carregarDados() {
         document.getElementById('nomePaciente').textContent = "Paciente não encontrado";
     }
 
-    // Busca a avaliação de ortopedia existente para este paciente
     try {
         const avaliacaoResponse = await fetch(`/avaliacoes/ortopedia/paciente/${pacienteId}`);
         if (avaliacaoResponse.ok) {
             const data = await avaliacaoResponse.json();
-            // Preenche todos os campos do formulário com os dados retornados
             for (const key in data) {
                 if (data.hasOwnProperty(key)) {
                     const element = document.getElementById(key);
@@ -82,7 +69,7 @@ async function carregarDados() {
 }
 
 /**
- * Coleta os dados do formulário e envia para a API salvar.
+ * Coleta os dados do formulário, envia para a API e redireciona em caso de sucesso.
  * @param {Event} event - O evento de submissão do formulário.
  */
 async function salvar(event) {
@@ -94,7 +81,6 @@ async function salvar(event) {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
-    // Adiciona os IDs necessários para a requisição
     data.idPaciente = parseInt(pacienteId);
     data.idFisioterapeuta = usuarioLogado.usuarioId;
 
@@ -110,8 +96,12 @@ async function salvar(event) {
         }
 
         resultadoDiv.className = 'alert alert-success';
-        resultadoDiv.textContent = 'Avaliação salva com sucesso!';
-        setTimeout(() => resultadoDiv.innerHTML = '', 4000);
+        resultadoDiv.textContent = 'Avaliação salva com sucesso! Redirecionando para o prontuário...';
+
+        // LÓGICA DE REDIRECIONAMENTO ADICIONADA
+        setTimeout(() => {
+            window.location.href = `../prontuario/prontuario.html?pacienteId=${pacienteId}`;
+        }, 2000); // Aguarda 2 segundos para o usuário ler a mensagem
 
     } catch(error) {
         resultadoDiv.className = 'alert alert-danger';

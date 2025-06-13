@@ -51,21 +51,38 @@
                     <div class="card-body">
                         <form id="formAvaliacaoOrtopedia">
                             <fieldset class="mb-4 p-3 border rounded">
-                                <legend class="h6">Dados Pessoais e Ocupacionais</legend>
+                                <legend class="h6 font-weight-bold text-primary">Dados Pessoais e Vitais</legend>
                                 <div class="row">
                                     <div class="col-md-6 mb-3"><label for="profissao" class="form-label">Profissão</label><input type="text" id="profissao" name="profissao" class="form-control"></div>
+                                    <div class="col-md-6 mb-3"><label for="indicacao_medica" class="form-label">Indicação Médica</label><input type="text" id="indicacao_medica" name="indicacao_medica" class="form-control"></div>
+                                </div>
+                                <div class="row">
                                     <div class="col-md-3 mb-3"><label for="pressao_arterial" class="form-label">Pressão Arterial</label><input type="text" id="pressao_arterial" name="pressao_arterial" class="form-control"></div>
                                     <div class="col-md-3 mb-3"><label for="frequencia_cardiaca" class="form-label">Freq. Cardíaca (bpm)</label><input type="number" id="frequencia_cardiaca" name="frequencia_cardiaca" class="form-control"></div>
                                     <div class="col-md-3 mb-3"><label for="frequencia_respiratoria" class="form-label">Freq. Respiratória (rpm)</label><input type="number" id="frequencia_respiratoria" name="frequencia_respiratoria" class="form-control"></div>
                                     <div class="col-md-3 mb-3"><label for="temperatura" class="form-label">Temperatura (°C)</label><input type="number" step="0.1" id="temperatura" name="temperatura" class="form-control"></div>
                                 </div>
                             </fieldset>
+
                             <fieldset class="mb-4 p-3 border rounded">
-                                <legend class="h6">Anamnese</legend>
+                                <legend class="h6 font-weight-bold text-primary">Anamnese</legend>
                                 <div class="mb-3"><label for="queixa_principal" class="form-label">Queixa Principal</label><textarea id="queixa_principal" name="queixa_principal" rows="3" class="form-control"></textarea></div>
-                                <div class="mb-3"><label for="hda_hdp" class="form-label">HDA / HDP</label><textarea id="hda_hdp" name="hda_hdp" rows="4" class="form-control"></textarea></div>
+                                <div class="mb-3"><label for="hda_hdp" class="form-label">História da Doença Atual (HDA) / História da Doença Pregressa (HDP)</label><textarea id="hda_hdp" name="hda_hdp" rows="4" class="form-control"></textarea></div>
                                 <div class="mb-3"><label for="medicacoes" class="form-label">Medicações em Uso</label><textarea id="medicacoes" name="medicacoes" rows="2" class="form-control"></textarea></div>
+                                <div class="mb-3"><label for="alergias" class="form-label">Alergias</label><textarea id="alergias" name="alergias" rows="2" class="form-control"></textarea></div>
+                                <div class="mb-3"><label for="comorbidades" class="form-label">Comorbidades (Diabetes, Hipertensão, etc.)</label><textarea id="comorbidades" name="comorbidades" rows="2" class="form-control"></textarea></div>
+                                <div class="mb-3"><label for="doencas_cardiacas" class="form-label">Doenças Cardíacas</label><textarea id="doencas_cardiacas" name="doencas_cardiacas" rows="2" class="form-control"></textarea></div>
                             </fieldset>
+
+                            <fieldset class="mb-4 p-3 border rounded">
+                                <legend class="h6 font-weight-bold text-primary">Avaliação Fisioterapêutica</legend>
+                                <div class="mb-3"><label for="avaliacao_postural" class="form-label">Avaliação Postural</label><textarea id="avaliacao_postural" name="avaliacao_postural" rows="3" class="form-control"></textarea></div>
+                                <div class="mb-3"><label for="diagnostico_fisioterapeutico" class="form-label">Diagnóstico Fisioterapêutico</label><textarea id="diagnostico_fisioterapeutico" name="diagnostico_fisioterapeutico" rows="3" class="form-control"></textarea></div>
+                                <div class="mb-3"><label for="objetivos" class="form-label">Objetivos do Tratamento</label><textarea id="objetivos" name="objetivos" rows="3" class="form-control"></textarea></div>
+                                <div class="mb-3"><label for="conduta" class="form-label">Conduta Proposta</label><textarea id="conduta" name="conduta" rows="3" class="form-control"></textarea></div>
+                                <div class="mb-3"><label for="observacoes" class="form-label">Observações Gerais</label><textarea id="observacoes" name="observacoes" rows="3" class="form-control"></textarea></div>
+                            </fieldset>
+
                             <hr>
                             <div id="resultado" class="my-3"></div>
                             <button type="submit" class="btn btn-primary btn-lg">Salvar Avaliação</button>

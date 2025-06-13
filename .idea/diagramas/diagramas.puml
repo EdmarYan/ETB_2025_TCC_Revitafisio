@@ -1,0 +1,830 @@
+@startuml
+class com.revitafisio.entities.paciente.Evolucao {
+- Integer idEvolucao
+- Usuario paciente
+- Usuario fisioterapeuta
+- LocalDate data
+- String descricao
+- boolean preenchida
+}
+
+class com.revitafisio.paciente.service.AvaliacaoRpgService {
+- AvaliacaoRpgRepository avaliacaoRepository
+- PacienteRepository pacienteRepository
+- FuncionarioRepository funcionarioRepository
++ AvaliacaoRpg salvar(AvaliacaoRpgRequest)
++ Optional<AvaliacaoRpg> buscarPorPaciente(Integer)
+}
+
+
+class com.revitafisio.records.AtualizarStatusRequest {
+- String novoStatus
++ String novoStatus()
+}
+
+
+class com.revitafisio.entities.usuarios.Paciente {
+}
+class com.revitafisio.agendamento.service.HorarioTrabalhoService {
+- {static} Logger logger
+- HorarioTrabalhoRepository horarioTrabalhoRepository
+- HorarioDisponivelRepository horarioDisponivelRepository
+- FuncionarioRepository funcionarioRepository
++ HorarioTrabalhoResponse adicionarHorario(HorarioTrabalhoRequest)
++ void gerarDisponibilidadeParaMes(Integer,int,int)
++ List<HorarioTrabalhoResponse> listarHorariosPorFisioterapeuta(Integer)
++ void removerHorario(Integer)
+}
+
+
+class com.revitafisio.records.HorarioTrabalhoResponse {
+- Integer id
+- DayOfWeek diaDaSemana
+- String nomeDiaSemana
+- LocalTime horaInicio
+- LocalTime horaFim
++ Integer id()
++ LocalTime horaFim()
++ String nomeDiaSemana()
++ DayOfWeek diaDaSemana()
++ LocalTime horaInicio()
+}
+
+
+class com.revitafisio.records.AtualizarFuncionarioRequest {
+- String nome
+- LocalDate dataNascimento
++ String nome()
++ LocalDate dataNascimento()
+}
+
+
+interface com.revitafisio.repository.PacienteRepository {
+~ List<Paciente> findByNomeContainingIgnoreCase(String)
+}
+
+class com.revitafisio.entities.permissoes.Permissao {
+- Integer idPermissao
+- String codigo
+- String descricao
+}
+
+interface com.revitafisio.repository.HorarioDisponivelRepository {
+~ List<HorarioDisponivel> findByFisioterapeutaIdUsuarioAndDataBetween(Integer,LocalDate,LocalDate)
+~ void deleteByFisioterapeutaIdUsuarioAndDataBetween(Integer,LocalDate,LocalDate)
+~ List<HorarioDisponivel> findByFisioterapeutaIdUsuarioAndDataAndHoraInicio(Integer,LocalDate,LocalTime)
+}
+
+class com.revitafisio.paciente.Controller.AvaliacaoOrtopediaController {
+- AvaliacaoOrtopediaService avaliacaoService
++ ResponseEntity<AvaliacaoOrtopedia> salvarAvaliacao(AvaliacaoOrtopediaRequest)
++ ResponseEntity<AvaliacaoOrtopedia> buscarPorPaciente(Integer)
+}
+
+
+class com.revitafisio.agendamento.controller.HorarioDisponivelController {
+- HorarioDisponivelService horarioDisponivelService
++ ResponseEntity<List<HorarioDisponivelResponse>> buscarDisponibilidade(Integer,LocalDate,LocalDate)
+}
+
+
+interface com.revitafisio.repository.EspecialidadeRepository {
+}
+class com.revitafisio.records.FuncionarioDetalhesResponse {
+- Integer idUsuario
+- String nome
+- String cpf
+- LocalDate dataNascimento
+- boolean ativo
+- String tipo_usuario
+- Set<Especialidade> especialidades
++ {static} FuncionarioDetalhesResponse from(Usuario)
++ Integer idUsuario()
++ String nome()
++ LocalDate dataNascimento()
++ String cpf()
++ boolean ativo()
++ Set<Especialidade> especialidades()
++ String tipo_usuario()
+}
+
+
+class com.revitafisio.records.PacienteDetalhesResponse {
+- Integer id
+- String nome
+- String cpf
+- LocalDate dataNascimento
+- boolean ativo
+- Set<Contato> contatos
++ Integer id()
++ String nome()
++ LocalDate dataNascimento()
++ String cpf()
++ boolean ativo()
++ Set<Contato> contatos()
+}
+
+
+interface com.revitafisio.repository.AgendamentoRepository {
+~ List<Agendamento> findByFisioterapeuta_IdUsuarioAndDataHoraInicioGreaterThanEqualAndDataHoraFimLessThanEqual(Integer,LocalDateTime,LocalDateTime)
+~ List<RelatorioAtendimentoResponse> getRelatorioAtendimentosPorPeriodo(LocalDateTime,LocalDateTime)
+~ List<Agendamento> findAllByStatusAndDataHoraInicioBefore(StatusAgendamento,LocalDateTime)
+}
+
+class com.revitafisio.entities.permissoes.UsuarioPermissao {
+- UsuarioPermissaoId id
+- Usuario usuario
+- Permissao permissao
+- Especialidade especialidade
+}
+
+interface com.revitafisio.repository.FuncionarioRepository {
+~ List<Usuario> findAllFuncionarios()
+~ Optional<Usuario> findFuncionarioById(Integer)
+}
+
+interface com.revitafisio.repository.AvaliacaoRpgRepository {
+~ Optional<AvaliacaoRpg> findByPacienteIdUsuario(Integer)
+}
+
+class com.revitafisio.relatorio.controller.RelatorioController {
+- RelatorioService relatorioService
++ ResponseEntity<List<RelatorioAtendimentoResponse>> getRelatorioAtendimentos(int,int)
+}
+
+
+interface com.revitafisio.repository.UsuarioRepository {
+~ Optional<Usuario> findByCpf(String)
+}
+
+class com.revitafisio.entities.usuarios.Fisioterapeuta {
+- Set<Especialidade> especialidades
+}
+
+class com.revitafisio.relatorio.service.RelatorioService {
+- AgendamentoRepository agendamentoRepository
++ List<RelatorioAtendimentoResponse> gerarRelatorioAtendimentos(int,int)
+}
+
+
+class com.revitafisio.records.RelatorioAtendimentoResponse {
+- String nomeFisioterapeuta
+- Long totalAtendimentos
++ String nomeFisioterapeuta()
++ Long totalAtendimentos()
+}
+
+
+class com.revitafisio.records.CriarAgendamentoRequest {
+- Integer idPaciente
+- Integer idFisioterapeuta
+- Integer idEspecialidade
+- LocalDateTime dataHoraInicio
+- LocalDateTime dataHoraFim
++ Integer idFisioterapeuta()
++ Integer idEspecialidade()
++ LocalDateTime dataHoraInicio()
++ LocalDateTime dataHoraFim()
++ Integer idPaciente()
+}
+
+
+class com.revitafisio.records.HorarioDisponivelResponse {
+- Integer id
+- LocalDate data
+- LocalTime horaInicio
+- LocalTime horaFim
+- boolean disponivel
++ Integer id()
++ LocalTime horaFim()
++ LocalDate data()
++ boolean disponivel()
++ LocalTime horaInicio()
+}
+
+
+class com.revitafisio.agendamento.service.HorarioDisponivelService {
+- HorarioDisponivelRepository horarioDisponivelRepository
++ List<HorarioDisponivelResponse> buscarPorFisioEPeriodo(Integer,LocalDate,LocalDate)
+}
+
+
+class com.revitafisio.entities.agendamentos.Agendamento {
+- Integer idAgendamento
+- Usuario paciente
+- Usuario fisioterapeuta
+- Especialidade especialidade
+- LocalDateTime dataHoraInicio
+- LocalDateTime dataHoraFim
+- StatusAgendamento status
+}
+
+enum com.revitafisio.entities.agendamentos.StatusAgendamento {
++  CONFIRMADO
++  CANCELADO
++  PENDENTE
++  REALIZADO
++  NAO_COMPARECEU
+}
+
+class com.revitafisio.auth.controller.AuthController {
+- AuthService authService
++ ResponseEntity<AuthResponse> login(AuthRequest)
+}
+
+
+class com.revitafisio.funcionario.controller.EspecialidadeController {
+- EspecialidadeRepository especialidadeRepository
++ ResponseEntity<List<Especialidade>> listarEspecialidades()
+}
+
+
+class com.revitafisio.records.CriarFuncionarioRequest {
+- String nome
+- String cpf
+- LocalDate dataNascimento
+- String senha
+- TipoFuncionario tipo
++  FISIOTERAPEUTA
++  RECEPCIONISTA
++  ADMIN
++ String nome()
++ LocalDate dataNascimento()
++ String cpf()
++ String senha()
++ TipoFuncionario tipo()
+}
+
+
+enum com.revitafisio.records.TipoFuncionario {
++  FISIOTERAPEUTA
++  RECEPCIONISTA
++  ADMIN
+}
+
+class com.revitafisio.records.HorarioTrabalhoRequest {
+- Integer idFisioterapeuta
+- DayOfWeek diaDaSemana
+- LocalTime horaInicio
+- LocalTime horaFim
++ Integer idFisioterapeuta()
++ LocalTime horaFim()
++ DayOfWeek diaDaSemana()
++ LocalTime horaInicio()
+}
+
+
+class com.revitafisio.agendamento.controller.AgendamentoController {
+- AgendamentoService agendamentoService
++ ResponseEntity<AgendamentoResponse> criarAgendamento(CriarAgendamentoRequest)
++ ResponseEntity<List<AgendamentoResponse>> buscarAgenda(Integer,LocalDateTime,LocalDateTime)
++ ResponseEntity<List<AgendamentoResponse>> buscarPendentes()
++ ResponseEntity<Void> atualizarStatus(Integer,AtualizarStatusRequest)
+}
+
+
+class com.revitafisio.entities.usuarios.Contato {
+- Integer idContato
+- Usuario usuario
+- TipoContato tipo
+- String valor
+- boolean principal
+}
+
+enum com.revitafisio.entities.usuarios.TipoContato {
++  TELEFONE
++  CELULAR
++  EMAIL
++  WHATSAPP
+}
+
+class com.revitafisio.auth.service.AuthService {
+- UsuarioRepository usuarioRepository
++ AuthResponse autenticar(AuthRequest)
+}
+
+
+class com.revitafisio.entities.usuarios.Admin {
+}
+class com.revitafisio.paciente.Controller.EvolucaoController {
+- EvolucaoService evolucaoService
++ ResponseEntity<EvolucaoResponse> salvarEvolucao(CriarEvolucaoRequest)
++ ResponseEntity<List<EvolucaoResponse>> listarPorPaciente(Integer)
+}
+
+
+class com.revitafisio.records.FuncionarioResponse {
+- Integer id
+- String nome
+- String tipo
++ Integer id()
++ String nome()
++ String tipo()
+}
+
+
+class com.revitafisio.entities.paciente.AvaliacaoRpg {
+- Integer idAvaliacao
+- Usuario paciente
+- Usuario fisioterapeuta
+- LocalDate dataAvaliacao
+- String diagnostico_clinico
+- String hma
+- String posicao_dor
+- String outras_patologias
+- String outros_exames
+- String medicamentos_descricao
+- String outros_desequilibrios
+- String tratamento_proposto
+- String observacoes
+- Boolean ressonancia_magnetica
+- Boolean raio_x
+- Boolean tomografia
+- Boolean uso_medicamentos
+- GrauDor grau_dor
+- PosicaoCabeca cabeca
+- NivelamentoOmbros ombros
+- SimetriaMaos maos
+- SimetriaEias eias
+- PosicaoJoelhos joelhos
+- CurvaturaLombar lombar
+- PosicaoPelve pelve
+- PosicaoEscapulas escapulas
+}
+
+enum com.revitafisio.entities.paciente.GrauDor {
++  LEVE
++  MODERADA
++  INTENSA
+}
+
+enum com.revitafisio.entities.paciente.PosicaoCabeca {
++  ALINHADA
++  RODADA_DIREITA
++  RODADA_ESQUERDA
++  INCLINADA_ESQUERDA
++  INCLINADA_DIREITA
+}
+
+enum com.revitafisio.entities.paciente.NivelamentoOmbros {
++  NIVELADOS
++  ESQUERDO_ELEVADO
++  DIREITO_ELEVADO
+}
+
+enum com.revitafisio.entities.paciente.SimetriaMaos {
++  SIMETRICOS
++  DIREITA_ALTA
++  ESQUERDA_ALTA
+}
+
+enum com.revitafisio.entities.paciente.SimetriaEias {
++  SIMETRICAS
++  DIREITA_ALTA
++  ESQUERDA_ALTA
+}
+
+enum com.revitafisio.entities.paciente.PosicaoJoelhos {
++  VALGO
++  VARO
++  NORMAL
+}
+
+enum com.revitafisio.entities.paciente.CurvaturaLombar {
++  HIPERLORDOSE
++  RETIFICADA
++  NORMAL
+}
+
+enum com.revitafisio.entities.paciente.PosicaoPelve {
++  ANTEVERSÃO
++  RETROVERSÃO
++  NORMAL
+}
+
+enum com.revitafisio.entities.paciente.PosicaoEscapulas {
++  DIREITA_ALTA
++  ESQUERDA_ALTA
+}
+
+class com.revitafisio.records.CriarContatoRequest {
+- Contato.TipoContato tipo
+- String valor
+- boolean principal
++ String valor()
++ boolean principal()
++ Contato.TipoContato tipo()
+}
+
+
+class com.revitafisio.entities.usuarios.Recepcionista {
+}
+class com.revitafisio.RevitafisioApplication {
++ {static} void main(String[])
+}
+
+class com.revitafisio.entities.agendamentos.HorarioDisponivel {
+- Integer idHorario
+- Usuario fisioterapeuta
+- LocalDate data
+- LocalTime horaInicio
+- LocalTime horaFim
+- boolean disponivel
+}
+
+class com.revitafisio.records.EvolucaoResponse {
+- Integer idEvolucao
+- LocalDate data
+- String descricao
+- String nomeFisioterapeuta
++ String nomeFisioterapeuta()
++ Integer idEvolucao()
++ String descricao()
++ LocalDate data()
+}
+
+
+class com.revitafisio.records.CriarPacienteRequest {
+- String nome
+- String cpf
+- LocalDate dataNascimento
+- List<CriarContatoRequest> contatos
++ List<CriarContatoRequest> contatos()
++ String nome()
++ LocalDate dataNascimento()
++ String cpf()
+}
+
+
+abstract class com.revitafisio.entities.usuarios.Usuario {
+- Integer idUsuario
+- String nome
+- String cpf
+- LocalDate dataNascimento
+- String senha
+- LocalDateTime dataCadastro
+- Set<Contato> contatos
+- boolean ativo
+}
+
+class com.revitafisio.paciente.service.AvaliacaoOrtopediaService {
+- AvaliacaoOrtopediaRepository avaliacaoRepository
+- PacienteRepository pacienteRepository
+- FuncionarioRepository funcionarioRepository
++ AvaliacaoOrtopedia salvar(AvaliacaoOrtopediaRequest)
++ Optional<AvaliacaoOrtopedia> buscarPorPaciente(Integer)
+}
+
+
+class com.revitafisio.entities.usuarios.Especialidade {
+- Integer idEspecialidade
+- String nome
+- String cor
+}
+
+class com.revitafisio.auth.dto.AuthRequest {
+- String cpf
+- String senha
++ String cpf()
++ String senha()
+}
+
+
+class com.revitafisio.entities.permissoes.UsuarioPermissaoId {
+- Integer usuarioId
+- Integer permissaoId
+}
+
+class com.revitafisio.paciente.service.PacienteService {
+- UsuarioRepository usuarioRepository
+- PacienteRepository pacienteRepository
++ Integer criarPaciente(CriarPacienteRequest)
++ List<PacienteResponse> buscarPorNome(String)
++ PacienteDetalhesResponse buscarPorId(Integer)
++ PacienteDetalhesResponse atualizarPaciente(Integer,AtualizarPacienteRequest)
++ void inativarPaciente(Integer)
++ void ativarPaciente(Integer)
+- Contato toContatoEntity(CriarContatoRequest,Paciente)
+- PacienteResponse toPacienteResponse(Paciente)
+- PacienteDetalhesResponse toPacienteDetalhesResponse(Paciente)
++ List<PacienteResponse> buscarTodos()
+}
+
+
+class com.revitafisio.records.PacienteResponse {
+- Integer id
+- String nome
+- String cpf
++ Integer id()
++ String nome()
++ String cpf()
+}
+
+
+class com.revitafisio.records.AgendamentoResponse {
+- Integer id
+- String nomePaciente
+- String nomeFisioterapeuta
+- String nomeEspecialidade
+- LocalDateTime inicio
+- LocalDateTime fim
+- String status
++ Integer id()
++ String nomeFisioterapeuta()
++ String status()
++ LocalDateTime inicio()
++ LocalDateTime fim()
++ String nomePaciente()
++ String nomeEspecialidade()
+}
+
+
+class com.revitafisio.entities.permissoes.Cargo {
+- Integer idCargo
+- String nomeCargo
+- Set<Permissao> permissoes
+}
+
+class com.revitafisio.funcionario.controller.FuncionarioController {
+- FuncionarioService funcionarioService
++ ResponseEntity<Void> criarFuncionario(CriarFuncionarioRequest)
++ ResponseEntity<List<FuncionarioResponse>> listarFuncionarios()
++ ResponseEntity<FuncionarioDetalhesResponse> buscarPorId(Integer)
++ ResponseEntity<FuncionarioDetalhesResponse> atualizarFuncionario(Integer,AtualizarFuncionarioRequest)
++ ResponseEntity<Void> inativarFuncionario(Integer)
++ ResponseEntity<Void> ativarFuncionario(Integer)
++ ResponseEntity<FuncionarioDetalhesResponse> atualizarEspecialidades(Integer,List<Integer>)
+}
+
+
+class com.revitafisio.paciente.Controller.AvaliacaoRpgController {
+- AvaliacaoRpgService avaliacaoService
++ ResponseEntity<AvaliacaoRpg> salvarAvaliacao(AvaliacaoRpgRequest)
++ ResponseEntity<AvaliacaoRpg> buscarPorPaciente(Integer)
+}
+
+
+class com.revitafisio.agendamento.service.AgendamentoService {
+- AgendamentoRepository agendamentoRepository
+- PacienteRepository pacienteRepository
+- UsuarioRepository usuarioRepository
+- EspecialidadeRepository especialidadeRepository
+- HorarioDisponivelRepository horarioDisponivelRepository
++ AgendamentoResponse criarAgendamento(CriarAgendamentoRequest)
++ List<AgendamentoResponse> buscarAgenda(Integer,LocalDateTime,LocalDateTime)
++ List<AgendamentoResponse> buscarAgendamentosPendentesDeStatus()
++ void atualizarStatus(Integer,String)
+- void liberarHorario(Agendamento)
+}
+
+
+class com.revitafisio.auth.dto.RegisterRequest {
+- String cpf
+- String senha
+- String tipo
+- Set<String> authorities
++ Set<String> authorities()
++ String tipo()
++ String cpf()
++ String senha()
+}
+
+
+class com.revitafisio.paciente.service.EvolucaoService {
+- EvolucaoRepository evolucaoRepository
+- PacienteRepository pacienteRepository
+- FuncionarioRepository funcionarioRepository
++ EvolucaoResponse salvarEvolucao(CriarEvolucaoRequest)
++ List<EvolucaoResponse> listarEvolucoesPorPaciente(Integer)
+}
+
+
+interface com.revitafisio.repository.EvolucaoRepository {
+~ List<Evolucao> findByPacienteIdUsuarioOrderByDataDesc(Integer)
+}
+
+class com.revitafisio.records.AtualizarPacienteRequest {
+- String nome
+- LocalDate dataNascimento
+- List<CriarContatoRequest> contatos
++ List<CriarContatoRequest> contatos()
++ String nome()
++ LocalDate dataNascimento()
+}
+
+
+class com.revitafisio.entities.paciente.AvaliacaoOrtopedia {
+- Integer idAvaliacao
+- Usuario paciente
+- Usuario fisioterapeuta
+- LocalDate dataAvaliacao
+- String profissao
+- String pressao_arterial
+- String avaliacao_postural
+- String alergias
+- String indicacao_medica
+- String queixa_principal
+- String hda_hdp
+- String doencas_cardiacas
+- String comorbidades
+- String medicacoes
+- String diagnostico_fisioterapeutico
+- String objetivos
+- String conduta
+- String observacoes
+- Integer frequencia_cardiaca
+- Integer frequencia_respiratoria
+- BigDecimal temperatura
+}
+
+class com.revitafisio.entities.agendamentos.HorarioTrabalho {
+- Integer id
+- Usuario fisioterapeuta
+- DayOfWeek diaDaSemana
+- LocalTime horaInicio
+- LocalTime horaFim
+- boolean ativo
+}
+
+class com.revitafisio.records.AvaliacaoRpgRequest {
+- Integer idPaciente
+- Integer idFisioterapeuta
+- String diagnostico_clinico
+- String hma
+- String posicao_dor
+- String outras_patologias
+- String outros_exames
+- String medicamentos_descricao
+- String outros_desequilibrios
+- String tratamento_proposto
+- String observacoes
+- Boolean ressonancia_magnetica
+- Boolean raio_x
+- Boolean tomografia
+- Boolean uso_medicamentos
+- AvaliacaoRpg.GrauDor grau_dor
+- AvaliacaoRpg.PosicaoCabeca cabeca
+- AvaliacaoRpg.NivelamentoOmbros ombros
+- AvaliacaoRpg.SimetriaMaos maos
+- AvaliacaoRpg.SimetriaEias eias
+- AvaliacaoRpg.PosicaoJoelhos joelhos
+- AvaliacaoRpg.CurvaturaLombar lombar
+- AvaliacaoRpg.PosicaoPelve pelve
+- AvaliacaoRpg.PosicaoEscapulas escapulas
++ Integer idFisioterapeuta()
++ AvaliacaoRpg.CurvaturaLombar lombar()
++ AvaliacaoRpg.PosicaoPelve pelve()
++ AvaliacaoRpg.SimetriaEias eias()
++ String observacoes()
++ Boolean ressonancia_magnetica()
++ AvaliacaoRpg.GrauDor grau_dor()
++ String medicamentos_descricao()
++ AvaliacaoRpg.PosicaoEscapulas escapulas()
++ Boolean tomografia()
++ Boolean uso_medicamentos()
++ String outros_exames()
++ AvaliacaoRpg.NivelamentoOmbros ombros()
++ String tratamento_proposto()
++ AvaliacaoRpg.SimetriaMaos maos()
++ AvaliacaoRpg.PosicaoJoelhos joelhos()
++ String diagnostico_clinico()
++ String outras_patologias()
++ String outros_desequilibrios()
++ Integer idPaciente()
++ String hma()
++ String posicao_dor()
++ Boolean raio_x()
++ AvaliacaoRpg.PosicaoCabeca cabeca()
+}
+
+
+class com.revitafisio.paciente.Controller.PacienteController {
+- PacienteService pacienteService
++ ResponseEntity<Void> criarPaciente(CriarPacienteRequest)
++ ResponseEntity<List<PacienteResponse>> buscarPacientes(String)
++ ResponseEntity<PacienteDetalhesResponse> buscarPorId(Integer)
++ ResponseEntity<PacienteDetalhesResponse> atualizarPaciente(Integer,AtualizarPacienteRequest)
++ ResponseEntity<Void> inativarPaciente(Integer)
++ ResponseEntity<Void> ativarPaciente(Integer)
+}
+
+
+interface com.revitafisio.repository.HorarioTrabalhoRepository {
+~ List<HorarioTrabalho> findByFisioterapeutaIdUsuario(Integer)
+~ List<HorarioTrabalho> findByFisioterapeuta_IdUsuarioAndDiaDaSemana(Integer,DayOfWeek)
+}
+
+class com.revitafisio.records.AvaliacaoOrtopediaRequest {
+- Integer idPaciente
+- Integer idFisioterapeuta
+- String profissao
+- String pressao_arterial
+- String avaliacao_postural
+- String alergias
+- String indicacao_medica
+- String queixa_principal
+- String hda_hdp
+- String doencas_cardiacas
+- String comorbidades
+- String medicacoes
+- String diagnostico_fisioterapeutico
+- String objetivos
+- String conduta
+- String observacoes
+- Integer frequencia_cardiaca
+- Integer frequencia_respiratoria
+- BigDecimal temperatura
++ Integer idFisioterapeuta()
++ String avaliacao_postural()
++ String doencas_cardiacas()
++ String hda_hdp()
++ Integer frequencia_respiratoria()
++ String indicacao_medica()
++ String objetivos()
++ String queixa_principal()
++ String observacoes()
++ String alergias()
++ String comorbidades()
++ String diagnostico_fisioterapeutico()
++ String medicacoes()
++ String profissao()
++ Integer frequencia_cardiaca()
++ String pressao_arterial()
++ String conduta()
++ BigDecimal temperatura()
++ Integer idPaciente()
+}
+
+
+class com.revitafisio.funcionario.service.FuncionarioService {
+- UsuarioRepository usuarioRepository
+- FuncionarioRepository funcionarioRepository
+- EspecialidadeRepository especialidadeRepository
++ Integer criarFuncionario(CriarFuncionarioRequest)
++ List<FuncionarioResponse> buscarTodos()
++ FuncionarioDetalhesResponse buscarDetalhesPorId(Integer)
++ FuncionarioDetalhesResponse atualizarFuncionario(Integer,AtualizarFuncionarioRequest)
++ void inativarFuncionario(Integer)
++ void ativarFuncionario(Integer)
++ Fisioterapeuta atualizarEspecialidades(Integer,List<Integer>)
+- FuncionarioResponse toFuncionarioResponse(Usuario)
+}
+
+
+class com.revitafisio.records.CriarEvolucaoRequest {
+- Integer idPaciente
+- Integer idFisioterapeuta
+- String descricao
++ Integer idFisioterapeuta()
++ String descricao()
++ Integer idPaciente()
+}
+
+
+class com.revitafisio.agendamento.controller.HorarioTrabalhoController {
+- HorarioTrabalhoService horarioTrabalhoService
++ ResponseEntity<HorarioTrabalhoResponse> adicionarHorario(HorarioTrabalhoRequest)
++ ResponseEntity<List<HorarioTrabalhoResponse>> listarPorFisioterapeuta(Integer)
++ ResponseEntity<Void> removerHorario(Integer)
++ ResponseEntity<Void> gerarDisponibilidade(Integer,int,int)
+}
+
+
+interface com.revitafisio.repository.AvaliacaoOrtopediaRepository {
+~ Optional<AvaliacaoOrtopedia> findByPacienteIdUsuario(Integer)
+}
+
+class com.revitafisio.auth.dto.AuthResponse {
+- Integer usuarioId
+- String nome
+- String tipoUsuario
++ Integer usuarioId()
++ String nome()
++ String tipoUsuario()
+}
+
+
+class com.revitafisio.converters.DayOfWeekConverter {
++ Integer convertToDatabaseColumn(DayOfWeek)
++ DayOfWeek convertToEntityAttribute(Integer)
+}
+
+
+
+com.revitafisio.entities.usuarios.Usuario <|-- com.revitafisio.entities.usuarios.Paciente
+org.springframework.data.jpa.repository.JpaRepository <|-- com.revitafisio.repository.PacienteRepository
+org.springframework.data.jpa.repository.JpaRepository <|-- com.revitafisio.repository.HorarioDisponivelRepository
+org.springframework.data.jpa.repository.JpaRepository <|-- com.revitafisio.repository.EspecialidadeRepository
+org.springframework.data.jpa.repository.JpaRepository <|-- com.revitafisio.repository.AgendamentoRepository
+org.springframework.data.jpa.repository.JpaRepository <|-- com.revitafisio.repository.FuncionarioRepository
+org.springframework.data.jpa.repository.JpaRepository <|-- com.revitafisio.repository.AvaliacaoRpgRepository
+org.springframework.data.jpa.repository.JpaRepository <|-- com.revitafisio.repository.UsuarioRepository
+com.revitafisio.entities.usuarios.Usuario <|-- com.revitafisio.entities.usuarios.Fisioterapeuta
+com.revitafisio.entities.usuarios.Usuario <|-- com.revitafisio.entities.usuarios.Admin
+com.revitafisio.entities.usuarios.Usuario <|-- com.revitafisio.entities.usuarios.Recepcionista
+java.io.Serializable <|.. com.revitafisio.entities.permissoes.UsuarioPermissaoId
+org.springframework.data.jpa.repository.JpaRepository <|-- com.revitafisio.repository.EvolucaoRepository
+org.springframework.data.jpa.repository.JpaRepository <|-- com.revitafisio.repository.HorarioTrabalhoRepository
+org.springframework.data.jpa.repository.JpaRepository <|-- com.revitafisio.repository.AvaliacaoOrtopediaRepository
+jakarta.persistence.AttributeConverter <|.. com.revitafisio.converters.DayOfWeekConverter
+@enduml
