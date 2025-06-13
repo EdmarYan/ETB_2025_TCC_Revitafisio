@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Avaliação de RPG - Revitafisio</title>
+    <link href="../../vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="../../css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="avaliacao-rpg.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="../dashboard/dashboard.html">
+            <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-heartbeat"></i></div>
+            <div class="sidebar-brand-text mx-3">Revitafisio</div>
+        </a>
+        <hr class="sidebar-divider my-0">
+        <li class="nav-item"><a class="nav-link" href="../dashboard/dashboard.html"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">Gestão</div>
+        <div id="sidebar-links"></div>
+    </ul>
+
+    <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item dropdown no-arrow">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                            <span class="mr-2 d-none d-lg-inline text-gray-600 small" id="userName"></span>
+                            <img class="img-profile rounded-circle" src="../../img/undraw_profile.svg">
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                            <a class="dropdown-item" href="#" id="logoutButton"><i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>Sair</a>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="container-fluid">
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">Ficha de Avaliação - RPG</h1>
+                    <a id="voltarProntuario" href="#" class="btn btn-sm btn-secondary shadow-sm"><i class="fas fa-arrow-left fa-sm text-white-50"></i> Voltar ao Prontuário</a>
+                </div>
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Paciente: <span id="nomePaciente">Carregando...</span></h6></div>
+                    <div class="card-body">
+                        <form id="formAvaliacaoRpg">
+                            <fieldset class="mb-4 p-3 border rounded">
+                                <legend class="h6">Anamnese</legend>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3"><label for="diagnostico_clinico" class="form-label">Diagnóstico Clínico</label><input type="text" id="diagnostico_clinico" name="diagnostico_clinico" class="form-control"></div>
+                                    <div class="col-md-12 mb-3"><label for="hma" class="form-label">HMA</label><textarea id="hma" name="hma" rows="3" class="form-control"></textarea></div>
+                                    <div class="col-md-6 mb-3"><label for="posicao_dor" class="form-label">Posição da Dor</label><input type="text" id="posicao_dor" name="posicao_dor" class="form-control"></div>
+                                    <div class="col-md-6 mb-3"><label for="grau_dor" class="form-label">Grau da Dor</label>
+                                        <select id="grau_dor" name="grau_dor" class="form-select"><option value="">Selecione...</option><option value="LEVE">Leve</option><option value="MODERADA">Moderada</option><option value="INTENSA">Intensa</option></select>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="mb-4 p-3 border rounded">
+                                <legend class="h6">Avaliação Postural</legend>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3"><label for="cabeca" class="form-label">Cabeça</label>
+                                        <select id="cabeca" name="cabeca" class="form-select"><option value="">Selecione...</option><option value="ALINHADA">Alinhada</option><option value="RODADA_DIREITA">Rodada à Direita</option><option value="RODADA_ESQUERDA">Rodada à Esquerda</option><option value="INCLINADA_DIREITA">Inclinada à Direita</option><option value="INCLINADA_ESQUERDA">Inclinada à Esquerda</option></select>
+                                    </div>
+                                    <div class="col-md-4 mb-3"><label for="ombros" class="form-label">Ombros</label>
+                                        <select id="ombros" name="ombros" class="form-select"><option value="">Selecione...</option><option value="NIVELADOS">Nivelados</option><option value="ESQUERDO_ELEVADO">Esquerdo Elevado</option><option value="DIREITO_ELEVADO">Direito Elevado</option></select>
+                                    </div>
+                                    <div class="col-md-4 mb-3"><label for="escapulas" class="form-label">Escápulas</label>
+                                        <select id="escapulas" name="escapulas" class="form-select"><option value="">Selecione...</option><option value="DIREITA_ALTA">Direita Alta</option><option value="ESQUERDA_ALTA">Esquerda Alta</option></select>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <div id="resultado" class="my-3"></div>
+                            <button type="submit" class="btn btn-primary btn-lg">Salvar Avaliação de RPG</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="sticky-footer bg-white">
+            <div class="container my-auto"><div class="copyright text-center my-auto"><span>Copyright &copy; Revitafisio 2025</span></div></div>
+        </footer>
+    </div>
+</div>
+
+<script src="../../vendor/jquery/jquery.min.js"></script>
+<script src="../../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../../vendor/jquery-easing/jquery.easing.min.js"></script>
+<script src="../../js/sb-admin-2.min.js"></script>
+<script src="avaliacao-rpg.js"></script>
+</body>
+</html>
